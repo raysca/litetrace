@@ -1,0 +1,19 @@
+{
+  "resourceSpans": [
+    {
+      "resource": { "attributes": [] },
+      "scopeSpans": [
+        {
+          "spans": [
+            {
+              "name": "missing-ids",
+              "kind": 1,
+              "startTimeUnixNano": "1700000000000000000",
+              "endTimeUnixNano": "1700000000010000000"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
