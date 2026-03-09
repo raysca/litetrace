@@ -1,5 +1,9 @@
 import type { Observation } from "../hooks/useTrace";
 
+function tryPrettyJson(s: string): string {
+  try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return s; }
+}
+
 interface Props { observations: Observation[] }
 
 export function ObservationPanel({ observations }: Props) {
@@ -31,7 +35,7 @@ export function ObservationPanel({ observations }: Props) {
             <div>
               <div className="text-xs font-medium text-muted-foreground mb-1">Prompt</div>
               <pre className="text-xs bg-muted rounded p-3 overflow-auto max-h-48 whitespace-pre-wrap">
-                {(() => { try { return JSON.stringify(JSON.parse(obs.prompt), null, 2); } catch { return obs.prompt; } })()}
+                {tryPrettyJson(obs.prompt)}
               </pre>
             </div>
           )}

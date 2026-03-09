@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 
 interface AnalyticsStats {
-  byDay: { day: string; totalCost: number; totalTokens: number; callCount: number }[];
-  byProvider: { provider: string | null; callCount: number; totalCost: number; totalTokens: number }[];
+  byDay: { day: string; totalCost: number | null; totalTokens: number | null; callCount: number }[];
+  byProvider: { provider: string | null; callCount: number; totalCost: number | null; totalTokens: number | null }[];
 }
 
 export function Analytics() {
@@ -42,8 +42,8 @@ export function Analytics() {
                     <tr key={i} className="border-t">
                       <td className="px-3 py-2 text-xs font-mono">{row.day}</td>
                       <td className="px-3 py-2">{row.callCount}</td>
-                      <td className="px-3 py-2">{row.totalTokens.toLocaleString()}</td>
-                      <td className="px-3 py-2">${row.totalCost.toFixed(4)}</td>
+                      <td className="px-3 py-2">{(row.totalTokens ?? 0).toLocaleString()}</td>
+                      <td className="px-3 py-2">${(row.totalCost ?? 0).toFixed(4)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -74,8 +74,8 @@ export function Analytics() {
                     <tr key={i} className="border-t">
                       <td className="px-3 py-2 capitalize">{row.provider ?? "unknown"}</td>
                       <td className="px-3 py-2">{row.callCount}</td>
-                      <td className="px-3 py-2">{row.totalTokens.toLocaleString()}</td>
-                      <td className="px-3 py-2">${row.totalCost.toFixed(4)}</td>
+                      <td className="px-3 py-2">{(row.totalTokens ?? 0).toLocaleString()}</td>
+                      <td className="px-3 py-2">${(row.totalCost ?? 0).toFixed(4)}</td>
                     </tr>
                   ))}
                 </tbody>

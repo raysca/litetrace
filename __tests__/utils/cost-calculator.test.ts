@@ -31,4 +31,10 @@ describe("calculateCost", () => {
     expect(calculateCost("gpt-4o-mini", -1, 50)).toBe(UNKNOWN_COST);
     expect(calculateCost("gpt-4o-mini", 50, -1)).toBe(UNKNOWN_COST);
   });
+
+  test("claude-3-haiku-20240307 matches claude-3-haiku", () => {
+    const cost = calculateCost("claude-3-haiku-20240307", 1000, 500);
+    // $0.25/1M input = 0.00025, $1.25/1M output = 0.000625 → total 0.000875
+    expect(cost).toBeCloseTo(0.000875, 8);
+  });
 });

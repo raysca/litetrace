@@ -9,7 +9,7 @@ export function handleListObservations(req: Request) {
     const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "50"), 100);
     const offset = parseInt(url.searchParams.get("offset") ?? "0");
 
-    if (isNaN(limit) || isNaN(offset) || limit < 1) return invalidParams("Invalid pagination params");
+    if (isNaN(limit) || isNaN(offset) || limit < 1 || offset < 0) return invalidParams("Invalid pagination params");
 
     const db = getDb();
     const result = listObservations(db, { model, limit, offset });

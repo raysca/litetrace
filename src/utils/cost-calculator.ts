@@ -8,6 +8,7 @@ const MODEL_PRICES: Record<string, [number, number]> = {
   "claude-sonnet-4":      [3.00,  15.00],
   "claude-3-5-haiku":     [0.80,   4.00],
   "claude-haiku-4":       [0.80,   4.00],
+  "claude-3-haiku":       [0.25,   1.25],
   "claude-3-opus":        [15.00, 75.00],
   "claude-opus-4":        [15.00, 75.00],
 };
