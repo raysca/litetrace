@@ -26,4 +26,9 @@ describe("calculateCost", () => {
     const cost = calculateCost("gpt-4o-mini-2024-07-18", 1000, 500);
     expect(cost).toBeCloseTo(0.00045, 8);
   });
+
+  test("negative token counts return UNKNOWN_COST", () => {
+    expect(calculateCost("gpt-4o-mini", -1, 50)).toBe(UNKNOWN_COST);
+    expect(calculateCost("gpt-4o-mini", 50, -1)).toBe(UNKNOWN_COST);
+  });
 });

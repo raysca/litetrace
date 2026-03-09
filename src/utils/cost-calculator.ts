@@ -23,6 +23,8 @@ export function calculateCost(
   promptTokens: number,
   completionTokens: number,
 ): number | null {
+  if (promptTokens < 0 || completionTokens < 0) return UNKNOWN_COST;
+
   const key = SORTED_KEYS.find(k => model.includes(k));
   if (!key) return UNKNOWN_COST;
 
