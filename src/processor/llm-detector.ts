@@ -9,7 +9,10 @@ const LLM_ATTRIBUTE_MARKERS = [
 ];
 
 export function isLlmSpan(span: NormalizedSpan): boolean {
-  return LLM_ATTRIBUTE_MARKERS.some(k => span.attributes[k] != null);
+  return LLM_ATTRIBUTE_MARKERS.some(k => {
+    const v = span.attributes[k];
+    return typeof v === "string" && v.length > 0;
+  });
 }
 
 export interface LlmObservationData {
@@ -27,7 +30,8 @@ export interface LlmObservationData {
 }
 
 function str(v: AttributeValue | undefined): string | null {
-  return v != null ? String(v) : null;
+  if (v == null || Array.isArray(v)) return null;
+  return String(v);
 }
 
 function num(v: AttributeValue | undefined): number | null {
