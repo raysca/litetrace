@@ -1,15 +1,4 @@
-interface Observation {
-  id: string;
-  spanId: string;
-  model: string | null;
-  provider: string | null;
-  promptTokens: number | null;
-  completionTokens: number | null;
-  totalTokens: number | null;
-  costUsd: number | null;
-  prompt: string | null;
-  completion: string | null;
-}
+import type { Observation } from "../hooks/useTrace";
 
 interface Props { observations: Observation[] }
 

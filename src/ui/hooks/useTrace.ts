@@ -18,7 +18,7 @@ export interface SpanRow {
   scopeVersion: string | null;
 }
 
-interface Observation {
+export interface Observation {
   id: string;
   spanId: string;
   model: string | null;
@@ -31,13 +31,30 @@ interface Observation {
   completion: string | null;
 }
 
+interface TraceRow {
+  id: string;
+  rootSpanName: string;
+  serviceName: string;
+  startTime: number;
+  endTime: number;
+  durationMs: number;
+  status: string;
+  spanCount: number;
+}
+
 interface TraceData {
-  trace: any;
-  spans: any[];
+  trace: TraceRow;
+  spans: SpanRow[];
   observations: Observation[];
 }
 
-export function useTrace(traceId: string) {
+interface UseTraceResult {
+  data: TraceData | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export function useTrace(traceId: string): UseTraceResult {
   const [data, setData] = useState<TraceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,12 +65,15 @@ export function useTrace(traceId: string) {
     setError(null);
 
     Promise.all([
-      fetch(`/api/traces/${traceId}`).then(r => r.json()),
-      fetch(`/api/traces/${traceId}/observations`).then(r => r.json()),
+      fetch(`/api/traces/${traceId}`).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
+      fetch(`/api/traces/${traceId}/observations`).then(r => r.ok ? r.json() : []).catch(() => []),
     ])
       .then(([traceJson, obsJson]) => {
         if (traceJson.error) throw new Error(traceJson.error.message ?? "Not found");
-        setData({ trace: traceJson.trace, spans: traceJson.spans, observations: obsJson });
+        setData({ trace: traceJson.trace, spans: traceJson.spans, observations: Array.isArray(obsJson) ? obsJson : [] });
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
