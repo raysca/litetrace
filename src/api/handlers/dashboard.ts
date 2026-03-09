@@ -28,9 +28,14 @@ export function handleDashboardStats(_req: Request) {
     return Response.json({
       totalTraces:   traceRow?.total ?? 0,
       totalLlmCalls: obsRow?.obsCount ?? 0,
-      totalCostUsd:  obsRow?.totalCost ?? 0,
-      totalTokens:   obsRow?.totalTokens ?? 0,
-      byModel,
+      totalCostUsd:  parseFloat(String(obsRow?.totalCost ?? "0")) || 0,
+      totalTokens:   parseFloat(String(obsRow?.totalTokens ?? "0")) || 0,
+      byModel: byModel.map(r => ({
+        model:       r.model,
+        callCount:   r.callCount,
+        totalCost:   parseFloat(String(r.totalCost ?? "0")) || 0,
+        totalTokens: parseFloat(String(r.totalTokens ?? "0")) || 0,
+      })),
     });
   } catch (err) {
     console.error("handleDashboardStats error:", err);
