@@ -69,4 +69,11 @@ describe("observation-repository", () => {
     const rows2 = listObservations(db, { model: "gpt-4o-mini" });
     expect(rows2.items).toHaveLength(1);
   });
+
+  test("listObservations returns total count", () => {
+    upsertObservation(db, makeObs());
+    const result = listObservations(db, {});
+    expect(result.total).toBe(1);
+    expect(result.items).toHaveLength(1);
+  });
 });

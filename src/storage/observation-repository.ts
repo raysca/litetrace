@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { observations } from "../db/schema";
 import type { LlmObservationData } from "../processor/llm-detector";
 import { randomUUID } from "crypto";
@@ -6,22 +6,11 @@ import { randomUUID } from "crypto";
 type Db = ReturnType<typeof import("../db/client").getDb>;
 
 export function upsertObservation(db: Db, data: LlmObservationData): void {
-  db.insert(observations).values({
-    id:               randomUUID(),
-    spanId:           data.spanId,
-    traceId:          data.traceId,
-    model:            data.model,
-    provider:         data.provider,
-    promptTokens:     data.promptTokens,
-    completionTokens: data.completionTokens,
-    totalTokens:      data.totalTokens,
-    costUsd:          data.costUsd,
-    prompt:           data.prompt,
-    completion:       data.completion,
-    createdAt:        data.createdAt,
-  }).onConflictDoUpdate({
-    target: observations.spanId,
-    set: {
+  try {
+    db.insert(observations).values({
+      id:               randomUUID(),
+      spanId:           data.spanId,
+      traceId:          data.traceId,
       model:            data.model,
       provider:         data.provider,
       promptTokens:     data.promptTokens,
@@ -30,8 +19,23 @@ export function upsertObservation(db: Db, data: LlmObservationData): void {
       costUsd:          data.costUsd,
       prompt:           data.prompt,
       completion:       data.completion,
-    },
-  }).run();
+      createdAt:        data.createdAt,
+    }).onConflictDoUpdate({
+      target: observations.spanId,
+      set: {
+        model:            data.model,
+        provider:         data.provider,
+        promptTokens:     data.promptTokens,
+        completionTokens: data.completionTokens,
+        totalTokens:      data.totalTokens,
+        costUsd:          data.costUsd,
+        prompt:           data.prompt,
+        completion:       data.completion,
+      },
+    }).run();
+  } catch (err) {
+    console.error("[observation-repository] upsertObservation error:", err);
+  }
 }
 
 export function getTraceObservations(db: Db, traceId: string) {
@@ -54,5 +58,8 @@ export function listObservations(db: Db, q: ObsQuery) {
     .offset(offset)
     .all();
 
-  return { items, limit, offset };
+  const totalRow = db.select({ count: count() }).from(observations).where(where).get();
+  const total = totalRow?.count ?? 0;
+
+  return { items, total, limit, offset };
 }
