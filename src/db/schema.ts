@@ -33,7 +33,7 @@ export const spans = sqliteTable("spans", {
 // Phase 2 stubs
 export const observations = sqliteTable("observations", {
   id: text("id").primaryKey(),
-  spanId: text("span_id").notNull().references(() => spans.id),
+  spanId: text("span_id").notNull().references(() => spans.id).unique(),
   traceId: text("trace_id").notNull(),
   model: text("model"),
   provider: text("provider"),        // e.g. "openai", "anthropic"

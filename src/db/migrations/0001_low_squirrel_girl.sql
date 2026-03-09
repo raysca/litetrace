@@ -1,0 +1,1 @@
+ALTER TABLE `observations` ADD `provider` text;

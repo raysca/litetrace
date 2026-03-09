@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `observations_span_id_unique` ON `observations` (`span_id`);
