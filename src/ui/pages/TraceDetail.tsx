@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useTrace } from "../hooks/useTrace";
 import { SpanTree } from "../components/SpanTree";
 import { SpanTimeline } from "../components/SpanTimeline";
+import { ObservationPanel } from "../components/ObservationPanel";
 import { StatusBadge } from "../components/StatusBadge";
 import { Button } from "../../components/ui/button";
 import { useNavigate, useParams } from "@tanstack/react-router";
 
-type Tab = "tree" | "timeline";
+type Tab = "tree" | "timeline" | "llm";
 
 export function TraceDetail() {
   const { traceId } = useParams({ from: "/traces/$traceId" });
@@ -28,7 +29,7 @@ export function TraceDetail() {
 
   if (!data) return null;
 
-  const { trace, spans } = data;
+  const { trace, spans, observations } = data;
 
   return (
     <div className="flex flex-col gap-4">
@@ -71,6 +72,19 @@ export function TraceDetail() {
             {t === "tree" ? "Span Tree" : "Timeline"}
           </button>
         ))}
+        {observations.length > 0 && (
+          <button
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+              tab === "llm" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setTab("llm")}
+          >
+            LLM
+            <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full">
+              {observations.length}
+            </span>
+          </button>
+        )}
       </div>
 
       <div>
@@ -82,6 +96,7 @@ export function TraceDetail() {
             traceEndTime={trace.endTime}
           />
         )}
+        {tab === "llm" && <ObservationPanel observations={observations} />}
       </div>
     </div>
   );

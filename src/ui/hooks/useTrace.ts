@@ -18,29 +18,28 @@ export interface SpanRow {
   scopeVersion: string | null;
 }
 
-interface TraceDetail {
-  trace: {
-    id: string;
-    rootSpanName: string;
-    serviceName: string;
-    startTime: number;
-    endTime: number;
-    durationMs: number;
-    status: string;
-    spanCount: number;
-  };
-  spans: SpanRow[];
+interface Observation {
+  id: string;
+  spanId: string;
+  model: string | null;
+  provider: string | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  totalTokens: number | null;
+  costUsd: number | null;
+  prompt: string | null;
+  completion: string | null;
 }
 
-interface UseTraceResult {
-  data: TraceDetail | null;
-  loading: boolean;
-  error: string | null;
+interface TraceData {
+  trace: any;
+  spans: any[];
+  observations: Observation[];
 }
 
-export function useTrace(traceId: string): UseTraceResult {
-  const [data, setData] = useState<TraceDetail | null>(null);
-  const [loading, setLoading] = useState(false);
+export function useTrace(traceId: string) {
+  const [data, setData] = useState<TraceData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,13 +47,15 @@ export function useTrace(traceId: string): UseTraceResult {
     setLoading(true);
     setError(null);
 
-    fetch(`/api/traces/${traceId}`)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+    Promise.all([
+      fetch(`/api/traces/${traceId}`).then(r => r.json()),
+      fetch(`/api/traces/${traceId}/observations`).then(r => r.json()),
+    ])
+      .then(([traceJson, obsJson]) => {
+        if (traceJson.error) throw new Error(traceJson.error.message ?? "Not found");
+        setData({ trace: traceJson.trace, spans: traceJson.spans, observations: obsJson });
       })
-      .then(setData)
-      .catch(e => setError(e instanceof Error ? e.message : "Unknown error"))
+      .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, [traceId]);
 
