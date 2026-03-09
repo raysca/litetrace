@@ -8,15 +8,17 @@ export function handleAnalyticsStats(_req: Request) {
     const db = getDb();
 
     // Group by day (createdAt is unix µs → convert to date)
+    const DAY_EXPR = sql<string>`date(${observations.createdAt} / 1000000, 'unixepoch')`;
+
     const byDay = db.select({
-      day: sql<string>`date(${observations.createdAt} / 1000000, 'unixepoch')`.as("day"),
+      day: DAY_EXPR.as("day"),
       totalCost: sum(observations.costUsd),
       totalTokens: sum(observations.totalTokens),
       callCount: count(),
     })
       .from(observations)
-      .groupBy(sql`day`)
-      .orderBy(sql`day`)
+      .groupBy(DAY_EXPR)
+      .orderBy(DAY_EXPR)
       .all();
 
     const byProvider = db.select({
