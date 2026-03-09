@@ -4,6 +4,7 @@ import { handleSeed } from "./handlers/seed";
 import { handleChat } from "./handlers/chat";
 import { handleListObservations, handleGetTraceObservations } from "./handlers/observations";
 import { handleDashboardStats } from "./handlers/dashboard";
+import { handleAnalyticsStats } from "./handlers/analytics";
 import { notFound } from "./errors";
 
 export function createApiRoutes() {
@@ -46,6 +47,11 @@ export function createApiRoutes() {
     "/api/dashboard/stats": {
       async GET(req: Request) {
         return handleDashboardStats(req);
+      },
+    },
+    "/api/analytics/stats": {
+      async GET(req: Request) {
+        return handleAnalyticsStats(req);
       },
     },
   };
