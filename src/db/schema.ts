@@ -36,6 +36,7 @@ export const observations = sqliteTable("observations", {
   spanId: text("span_id").notNull().references(() => spans.id),
   traceId: text("trace_id").notNull(),
   model: text("model"),
+  provider: text("provider"),        // e.g. "openai", "anthropic"
   promptTokens: integer("prompt_tokens"),
   completionTokens: integer("completion_tokens"),
   totalTokens: integer("total_tokens"),
