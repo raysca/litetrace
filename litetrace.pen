@@ -55,7 +55,7 @@
                   "id": "iyCwl",
                   "name": "logoLabel",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "LiteTrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -1876,7 +1876,7 @@
                   "id": "F9a9E",
                   "name": "sb2logoTxt",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "LiteTrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -3323,7 +3323,7 @@
                   "id": "egpzN",
                   "name": "sb3logotxt",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "LiteTrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -4943,7 +4943,7 @@
                   "id": "n3Tcf",
                   "name": "sb1logotxt",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "LiteTrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -5960,7 +5960,7 @@
                   "id": "WCU2a",
                   "name": "sb2logotxt",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "LiteTrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -6897,7 +6897,7 @@
                   "id": "bvtyB",
                   "name": "sb3logotxt",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "LiteTrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -8082,7 +8082,7 @@
                   "id": "2k7r1",
                   "name": "sbLogoTxt",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "LiteTrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -10494,7 +10494,7 @@
                   "id": "SOz3r",
                   "name": "sbLogoTxt",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "Litrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -15174,7 +15174,7 @@
                   "id": "LuX8M",
                   "name": "logoLabel",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "LiteTrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -15493,7 +15493,8 @@
                           "fill": "#888888",
                           "content": "API Keys",
                           "fontFamily": "Inter",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -15516,7 +15517,8 @@
                           "fill": "#888888",
                           "content": "Team",
                           "fontFamily": "Inter",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -15894,7 +15896,7 @@
                   "id": "FDO4i",
                   "name": "logoLabel",
                   "fill": "#111111",
-                  "content": "LLMScope",
+                  "content": "LiteTrace",
                   "fontFamily": "Lora",
                   "fontSize": 16,
                   "fontWeight": "500"
@@ -16208,7 +16210,8 @@
                           "fill": "#111111",
                           "content": "gpt-4o error",
                           "fontFamily": "Inter",
-                          "fontSize": 16
+                          "fontSize": 16,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "frame",
@@ -16537,7 +16540,8 @@
                                   "fill": "#333333",
                                   "content": "trc_8f3a2b9c1d",
                                   "fontFamily": "Inter",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 },
                                 {
                                   "type": "frame",
@@ -16650,7 +16654,8 @@
                                   "fill": "#333333",
                                   "content": "trc_2a9f1c4e8b",
                                   "fontFamily": "Inter",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 },
                                 {
                                   "type": "frame",

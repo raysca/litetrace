@@ -1,5 +1,6 @@
 import { handleListTraces, handleGetTrace } from "./handlers/traces";
 import { handleGetSpan } from "./handlers/spans";
+import { handleNorthwindQuery } from "./handlers/northwind";
 import { handleSeed } from "./handlers/seed";
 import { handleChat } from "./handlers/chat";
 import { handleListObservations, handleGetTraceObservations } from "./handlers/observations";
@@ -9,6 +10,11 @@ import { notFound } from "./errors";
 
 export function createApiRoutes() {
   return {
+    "/api/northwind/:entity": {
+      async GET(req: Request & { params: { entity: string } }) {
+        return handleNorthwindQuery(req, req.params.entity);
+      },
+    },
     "/api/traces": {
       async GET(req: Request) {
         return handleListTraces(req);
