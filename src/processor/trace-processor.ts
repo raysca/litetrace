@@ -3,6 +3,8 @@ import { processSpans } from "./span-processor";
 import { upsertSpans } from "../storage/trace-repository";
 import { getDb } from "../db/client";
 import { config } from "../config";
+import { isLlmSpan, extractLlmObservation } from "./llm-detector";
+import { upsertObservation } from "../storage/observation-repository";
 
 export class TraceProcessor {
   private queue: NormalizedSpan[] = [];
@@ -43,6 +45,11 @@ export class TraceProcessor {
     try {
       const db = getDb();
       await upsertSpans(db, batch);
+      const llmSpans = batch.filter(isLlmSpan);
+      for (const span of llmSpans) {
+        const obs = extractLlmObservation(span);
+        upsertObservation(db, obs);
+      }
     } catch (err) {
       console.error("[TraceProcessor] flush error:", err);
       // Re-queue on error (simple retry — no infinite loop guard for MVP)
