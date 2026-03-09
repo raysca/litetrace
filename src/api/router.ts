@@ -2,6 +2,7 @@ import { handleListTraces, handleGetTrace } from "./handlers/traces";
 import { handleGetSpan } from "./handlers/spans";
 import { handleSeed } from "./handlers/seed";
 import { handleChat } from "./handlers/chat";
+import { handleListObservations, handleGetTraceObservations } from "./handlers/observations";
 import { notFound } from "./errors";
 
 export function createApiRoutes() {
@@ -29,6 +30,16 @@ export function createApiRoutes() {
     "/api/chat": {
       async POST(req: Request) {
         return handleChat(req);
+      },
+    },
+    "/api/observations": {
+      async GET(req: Request) {
+        return handleListObservations(req);
+      },
+    },
+    "/api/traces/:traceId/observations": {
+      async GET(req: Request & { params: { traceId: string } }) {
+        return handleGetTraceObservations(req, req.params.traceId);
       },
     },
   };
