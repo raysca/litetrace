@@ -4,15 +4,13 @@ import { SpanTree } from "../components/SpanTree";
 import { SpanTimeline } from "../components/SpanTimeline";
 import { StatusBadge } from "../components/StatusBadge";
 import { Button } from "../../components/ui/button";
-
-interface TraceDetailProps {
-  traceId: string;
-  onBack: () => void;
-}
+import { useNavigate, useParams } from "@tanstack/react-router";
 
 type Tab = "tree" | "timeline";
 
-export function TraceDetail({ traceId, onBack }: TraceDetailProps) {
+export function TraceDetail() {
+  const { traceId } = useParams({ from: "/traces/$traceId" });
+  const navigate = useNavigate({ from: "/traces/$traceId" });
   const { data, loading, error } = useTrace(traceId);
   const [tab, setTab] = useState<Tab>("tree");
 
@@ -35,7 +33,7 @@ export function TraceDetail({ traceId, onBack }: TraceDetailProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={onBack}>← Back</Button>
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/traces" })}>← Back</Button>
         <h1 className="text-lg font-semibold flex-1 truncate">{trace.rootSpanName}</h1>
         <StatusBadge status={trace.status} />
       </div>

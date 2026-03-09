@@ -10,6 +10,10 @@ function nanosToMicros(nano: bigint): number {
   return Number(nano / 1000n);
 }
 
+function stringify(v: unknown): string {
+  return JSON.stringify(v, (_, val) => typeof val === "bigint" ? val.toString() : val);
+}
+
 function deriveTraceStatus(spanList: NormalizedSpan[]): string {
   if (spanList.some(s => s.status === "error")) return "error";
   if (spanList.every(s => s.status === "ok")) return "ok";
@@ -66,7 +70,7 @@ export async function upsertSpans(db: Db, spanList: NormalizedSpan[]): Promise<v
       durationMs,
       status,
       spanCount: newSpanCount,
-      resourceAttributes: JSON.stringify(root.resourceAttributes),
+      resourceAttributes: stringify(root.resourceAttributes),
     }).onConflictDoUpdate({
       target: traces.id,
       set: {
@@ -90,17 +94,17 @@ export async function upsertSpans(db: Db, spanList: NormalizedSpan[]): Promise<v
         durationMs: span.durationMs,
         statusCode: span.status,
         statusMessage: span.statusMessage,
-        attributes: JSON.stringify(span.attributes),
-        events: JSON.stringify(span.events),
-        links: JSON.stringify(span.links),
+        attributes: stringify(span.attributes),
+        events: stringify(span.events),
+        links: stringify(span.links),
         scopeName: span.scopeName,
         scopeVersion: span.scopeVersion,
       }).onConflictDoUpdate({
         target: spans.id,
         set: {
           name: span.name,
-          attributes: JSON.stringify(span.attributes),
-          events: JSON.stringify(span.events),
+          attributes: stringify(span.attributes),
+          events: stringify(span.events),
           statusCode: span.status,
           statusMessage: span.statusMessage,
         },

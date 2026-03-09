@@ -2,16 +2,14 @@ import { useTraces } from "../hooks/useTraces";
 import { StatusBadge } from "../components/StatusBadge";
 import { TraceFilters } from "../components/TraceFilters";
 import { Button } from "../../components/ui/button";
-
-interface TraceListProps {
-  onSelectTrace: (traceId: string) => void;
-}
+import { useNavigate } from "@tanstack/react-router";
 
 function formatTime(unixMicros: number): string {
   return new Date(unixMicros / 1000).toLocaleString();
 }
 
-export function TraceList({ onSelectTrace }: TraceListProps) {
+export function TraceList() {
+  const navigate = useNavigate({ from: "/traces" });
   const { items, total, limit, offset, loading, error, setPage, setFilters, refresh } = useTraces(50);
 
   const totalPages = Math.ceil(total / limit);
@@ -59,7 +57,7 @@ export function TraceList({ onSelectTrace }: TraceListProps) {
               <tr
                 key={trace.id}
                 className="border-t cursor-pointer hover:bg-muted/30 transition-colors"
-                onClick={() => onSelectTrace(trace.id)}
+                onClick={() => navigate({ to: "/traces/$traceId", params: { traceId: trace.id } })}
               >
                 <td className="py-2 px-3 font-medium">{trace.serviceName}</td>
                 <td className="py-2 px-3 font-mono text-xs truncate max-w-xs">{trace.rootSpanName}</td>

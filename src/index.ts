@@ -1,3 +1,4 @@
+import "./instrumentation";
 import { runMigrations } from "./db/migrate";
 import { getProcessor } from "./processor/trace-processor";
 import { startHttpReceiver } from "./receivers/http-receiver";
