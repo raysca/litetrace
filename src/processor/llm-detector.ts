@@ -1,5 +1,6 @@
 import type { NormalizedSpan, AttributeValue } from "./types";
 import { calculateCost } from "../utils/cost-calculator";
+import { config } from "../config";
 
 const LLM_ATTRIBUTE_MARKERS = [
   "gen_ai.system",
@@ -73,7 +74,7 @@ export function extractLlmObservation(span: NormalizedSpan): LlmObservationData 
 
   const costUsd =
     model && promptTokens != null && completionTokens != null
-      ? calculateCost(model, promptTokens, completionTokens)
+      ? calculateCost(model, promptTokens, completionTokens, config.costs)
       : null;
 
   // Prompt: prefer ai.prompt (AI SDK JSON), else build from span events

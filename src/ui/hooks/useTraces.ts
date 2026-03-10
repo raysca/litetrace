@@ -10,6 +10,9 @@ export interface TraceRow {
   status: string;
   spanCount: number;
   resourceAttributes: string;
+  model: string | null;
+  totalTokens: string | null;
+  totalCost: string | null;
 }
 
 interface TraceFilters {

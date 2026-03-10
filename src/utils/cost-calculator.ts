@@ -1,36 +1,41 @@
-// Prices in USD per 1M tokens: [inputPer1M, outputPer1M]
-const MODEL_PRICES: Record<string, [number, number]> = {
-  "gpt-4o":               [2.50,  10.00],
-  "gpt-4o-mini":          [0.15,   0.60],
-  "gpt-4":                [30.00, 60.00],
-  "gpt-3.5-turbo":        [0.50,   1.50],
-  "claude-3-5-sonnet":    [3.00,  15.00],
-  "claude-sonnet-4":      [3.00,  15.00],
-  "claude-3-5-haiku":     [0.80,   4.00],
-  "claude-haiku-4":       [0.80,   4.00],
-  "claude-3-haiku":       [0.25,   1.25],
-  "claude-3-opus":        [15.00, 75.00],
-  "claude-opus-4":        [15.00, 75.00],
-};
-
-// Sort keys by length descending so more specific keys (e.g. "gpt-4o-mini")
-// are matched before shorter prefixes (e.g. "gpt-4o" or "gpt-4").
-const SORTED_KEYS = Object.keys(MODEL_PRICES).sort((a, b) => b.length - a.length);
+import type { ModelCostEntry } from "../config";
 
 export const UNKNOWN_COST = null;
+
+// Strip Ollama-style `:tag` suffix: "llama3:8b" → "llama3", "gpt-oss:20b" → "gpt-oss"
+function baseModelName(name: string): string {
+  const colon = name.indexOf(":");
+  return colon === -1 ? name : name.slice(0, colon);
+}
 
 export function calculateCost(
   model: string,
   promptTokens: number,
   completionTokens: number,
+  configCosts: Record<string, ModelCostEntry> = {},
 ): number | null {
   if (promptTokens < 0 || completionTokens < 0) return UNKNOWN_COST;
 
-  const key = SORTED_KEYS.find(k => model.includes(k));
-  if (!key) return UNKNOWN_COST;
+  const m  = model.toLowerCase();
+  const mb = baseModelName(m);
 
-  const [inputRate, outputRate] = MODEL_PRICES[key]!;
-  const cost = (promptTokens / 1_000_000) * inputRate
-             + (completionTokens / 1_000_000) * outputRate;
-  return cost;
+  // Sort longest-first so more specific keys win ("gpt-4o-mini" before "gpt-4o")
+  const keys = Object.keys(configCosts).sort((a, b) => b.length - a.length);
+
+  // Pass 1 — exact substring match
+  let hit = keys.find(k => m.includes(k.toLowerCase()));
+
+  // Pass 2 — base-name match (strips :tag from both sides)
+  if (!hit) {
+    hit = keys.find(k => {
+      const kb = baseModelName(k.toLowerCase());
+      return mb.includes(kb) || kb.includes(mb);
+    });
+  }
+
+  if (!hit) return UNKNOWN_COST;
+
+  const [inputRate, outputRate] = configCosts[hit]!;
+  return (promptTokens / 1_000_000) * inputRate
+       + (completionTokens / 1_000_000) * outputRate;
 }

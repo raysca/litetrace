@@ -1,6 +1,6 @@
-import { eq, desc, and, count, sql } from "drizzle-orm";
+import { eq, desc, and, count, sum, sql } from "drizzle-orm";
 import { getDb } from "../db/client";
-import { traces, spans } from "../db/schema";
+import { traces, spans, observations } from "../db/schema";
 import type { NormalizedSpan } from "../processor/types";
 import { buildTraceFilters, buildPagination, type TraceQuery } from "./query-builder";
 
@@ -120,7 +120,35 @@ export function listTraces(q: TraceQuery) {
 
   const where = filters.length > 0 ? and(...filters) : undefined;
 
-  const items = db.select().from(traces)
+  // Aggregate observations per trace to surface model/tokens/cost in the list
+  const obsAgg = db
+    .select({
+      traceId: observations.traceId,
+      model: sql<string>`MIN(${observations.model})`.as("model"),
+      totalTokens: sum(observations.totalTokens).as("totalTokens"),
+      totalCost: sum(observations.costUsd).as("totalCost"),
+    })
+    .from(observations)
+    .groupBy(observations.traceId)
+    .as("obs_agg");
+
+  const items = db
+    .select({
+      id: traces.id,
+      rootSpanName: traces.rootSpanName,
+      serviceName: traces.serviceName,
+      startTime: traces.startTime,
+      endTime: traces.endTime,
+      durationMs: traces.durationMs,
+      status: traces.status,
+      spanCount: traces.spanCount,
+      resourceAttributes: traces.resourceAttributes,
+      model: obsAgg.model,
+      totalTokens: obsAgg.totalTokens,
+      totalCost: obsAgg.totalCost,
+    })
+    .from(traces)
+    .leftJoin(obsAgg, eq(traces.id, obsAgg.traceId))
     .where(where)
     .orderBy(desc(traces.startTime))
     .limit(limit)
