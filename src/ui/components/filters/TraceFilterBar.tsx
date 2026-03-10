@@ -5,7 +5,6 @@ import { DateRangeFilter } from "./DateRangeFilter";
 import { LatencyRangeFilter } from "./LatencyRangeFilter";
 import { SpanNameFilter } from "./SpanNameFilter";
 import { CostRangeFilter } from "./CostRangeFilter";
-import { Button } from "../../components/ui/button";
 
 interface TraceFilterBarProps {
   onFilter: (filters: {
@@ -131,16 +130,25 @@ export function TraceFilterBar({ onFilter, onRefresh }: TraceFilterBarProps) {
       {/* Controls */}
       <div className="flex gap-2">
         {hasAdvancedFilters && (
-          <Button size="sm" onClick={handleApplyAdvanced}>
+          <button
+            onClick={handleApplyAdvanced}
+            className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
             Apply Filters
-          </Button>
+          </button>
         )}
-        <Button size="sm" variant="outline" onClick={handleClearAll}>
+        <button
+          onClick={handleClearAll}
+          className="px-3 py-1.5 text-xs font-medium border border-input text-foreground rounded-md hover:bg-muted transition-colors"
+        >
           Clear All
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onRefresh}>
+        </button>
+        <button
+          onClick={onRefresh}
+          className="px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted rounded-md transition-colors"
+        >
           ↻ Refresh
-        </Button>
+        </button>
       </div>
     </div>
   );

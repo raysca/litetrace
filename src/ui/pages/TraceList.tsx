@@ -4,11 +4,10 @@ import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTraces } from "../hooks/useTraces";
 import { StatusBadge } from "../components/StatusBadge";
 import { RefreshControl } from "../components/RefreshControl";
+import { TraceFilterBar } from "../components/filters/TraceFilterBar";
 import { cn } from "../../lib/utils";
 
 const PAGE_SIZE = 20;
-
-type StatusFilter = "" | "ok" | "error" | "unset";
 
 function formatTime(unixMicros: number): string {
   return new Date(unixMicros / 1000).toLocaleTimeString("en-US", {
@@ -74,7 +73,6 @@ function PaginationButton({
 
 export function TraceList() {
   const navigate = useNavigate({ from: "/traces" });
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
   const [search, setSearch] = useState("");
 
   const { items, total, limit, offset, loading, error, setPage, setFilters, refresh } =
@@ -83,12 +81,6 @@ export function TraceList() {
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const currentPage = Math.floor(offset / limit) + 1;
-
-  function applyStatus(s: StatusFilter) {
-    setStatusFilter(s);
-    setPage(0);
-    setFilters({ status: s || undefined });
-  }
 
   // Page numbers to render: show first, last, current ±1
   function pageNumbers(): (number | "…")[] {
@@ -102,12 +94,6 @@ export function TraceList() {
     }
     return result;
   }
-
-  const STATUS_TABS: { label: string; value: StatusFilter }[] = [
-    { label: "All", value: "" },
-    { label: "success", value: "ok" },
-    { label: "error", value: "error" },
-  ];
 
   // Filter by search (client-side on trace id / root span name / service / model)
   const visible = search.trim()
@@ -149,23 +135,8 @@ export function TraceList() {
         </div>
       </div>
 
-      {/* Status filter tabs */}
-      <div className="flex items-center gap-1">
-        {STATUS_TABS.map(tab => (
-          <button
-            key={tab.value}
-            onClick={() => applyStatus(tab.value)}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-              statusFilter === tab.value
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Trace Filter Bar */}
+      <TraceFilterBar onFilter={setFilters} onRefresh={refresh} />
 
       {error && (
         <div className="text-sm text-status-error-text bg-status-error-bg border border-status-error/20 rounded-md px-3 py-2">
