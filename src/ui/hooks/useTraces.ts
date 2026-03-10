@@ -20,6 +20,11 @@ interface TraceFilters {
   status?: string;
   from?: number;
   to?: number;
+  spanName?: string;
+  latencyMinMs?: number;
+  latencyMaxMs?: number;
+  costMinUsd?: number;
+  costMaxUsd?: number;
 }
 
 interface UseTracesResult {
@@ -55,6 +60,11 @@ export function useTraces(pageSize = 50): UseTracesResult {
       if (filters.status) params.set("status", filters.status);
       if (filters.from) params.set("from", String(filters.from));
       if (filters.to) params.set("to", String(filters.to));
+      if (filters.spanName) params.set("spanName", filters.spanName);
+      if (filters.latencyMinMs !== undefined) params.set("latencyMin", String(filters.latencyMinMs));
+      if (filters.latencyMaxMs !== undefined) params.set("latencyMax", String(filters.latencyMaxMs));
+      if (filters.costMinUsd !== undefined) params.set("costMin", String(filters.costMinUsd));
+      if (filters.costMaxUsd !== undefined) params.set("costMax", String(filters.costMaxUsd));
 
       const res = await fetch(`/api/traces?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
