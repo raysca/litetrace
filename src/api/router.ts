@@ -6,6 +6,7 @@ import { handleChat } from "./handlers/chat";
 import { handleListObservations, handleGetTraceObservations } from "./handlers/observations";
 import { handleDashboardStats } from "./handlers/dashboard";
 import { handleAnalyticsStats } from "./handlers/analytics";
+import { handleGetServices } from "./handlers/services";
 import { notFound } from "./errors";
 
 export function createApiRoutes() {
@@ -58,6 +59,11 @@ export function createApiRoutes() {
     "/api/analytics/stats": {
       async GET(req: Request) {
         return handleAnalyticsStats(req);
+      },
+    },
+    "/api/services": {
+      async GET(req: Request) {
+        return handleGetServices(req);
       },
     },
   };

@@ -174,3 +174,13 @@ export function getSpan(spanId: string) {
   const db = getDb();
   return db.select().from(spans).where(eq(spans.id, spanId)).get() ?? null;
 }
+
+export function getServices(): string[] {
+  const db = getDb();
+  const result = db
+    .selectDistinct({ serviceName: traces.serviceName })
+    .from(traces)
+    .orderBy(traces.serviceName)
+    .all();
+  return result.map(r => r.serviceName);
+}
