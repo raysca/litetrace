@@ -2,21 +2,23 @@ import { useState, useEffect } from "react";
 import type { SpanRow, Observation } from "../hooks/useTrace";
 import { StatusBadge } from "./StatusBadge";
 import { cn } from "../../lib/utils";
-import { ChevronDown, ChevronRight, X, ChevronUp } from "lucide-react";
+import {
+  ChevronDown, ChevronRight, X,
+  Cpu, Database, Server, Shield, Zap, Box,
+} from "lucide-react";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface SpanNode extends SpanRow {
   children: SpanNode[];
   isRoot: boolean;
 }
 
-// ─── Tree builder ────────────────────────────────────────────────────────────
+// ─── Tree builder ─────────────────────────────────────────────────────────────
 
 function buildTree(spans: SpanRow[]): SpanNode[] {
   const map = new Map<string, SpanNode>();
   for (const s of spans) map.set(s.id, { ...s, children: [], isRoot: false });
-
   const roots: SpanNode[] = [];
   for (const node of map.values()) {
     if (node.parentSpanId && map.has(node.parentSpanId)) {
@@ -25,7 +27,6 @@ function buildTree(spans: SpanRow[]): SpanNode[] {
       roots.push(node);
     }
   }
-
   function sort(node: SpanNode) {
     node.children.sort((a, b) => a.startTime - b.startTime);
     node.children.forEach(sort);
@@ -36,66 +37,123 @@ function buildTree(spans: SpanRow[]): SpanNode[] {
   return roots;
 }
 
-// ─── Prompt parser ───────────────────────────────────────────────────────────
+// ─── Prompt parser ────────────────────────────────────────────────────────────
+// Handles three formats:
+//   1. { system?: string, messages: [{role, content: string | [{type,text}] }] }
+//   2. Array: [{role, content}]
+//   3. Plain string fallback
 
 interface PromptMessage {
-  role: string;   // e.g. "system", "user", "assistant"
+  role: string;
   content: string;
+}
+
+function extractContent(raw: unknown): string {
+  if (typeof raw === "string") return raw;
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((c: any) => c.type === "text")
+      .map((c: any) => String(c.text ?? ""))
+      .join("\n");
+  }
+  return String(raw ?? "");
 }
 
 function parsePrompt(raw: string | null): PromptMessage[] {
   if (!raw) return [];
   try {
-    const msgs = JSON.parse(raw);
-    if (Array.isArray(msgs)) {
-      return msgs.map((m: any) => ({
-        role:    String(m.role ?? "user"),
-        content: String(m.content ?? ""),
+    const parsed = JSON.parse(raw);
+    // Format: { system?: string, messages: [...] }
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const msgs: PromptMessage[] = [];
+      if (parsed.system) msgs.push({ role: "system", content: String(parsed.system) });
+      for (const m of Array.isArray(parsed.messages) ? parsed.messages : []) {
+        msgs.push({ role: String(m.role ?? "user"), content: extractContent(m.content) });
+      }
+      return msgs;
+    }
+    // Array format: [{role, content}]
+    if (Array.isArray(parsed)) {
+      return parsed.map((m: any) => ({
+        role: String(m.role ?? "user"),
+        content: extractContent(m.content),
       }));
     }
   } catch {}
-  // Plain string — treat as a single user message
   return [{ role: "user", content: raw }];
 }
 
-// ─── Collapsible section ─────────────────────────────────────────────────────
+// ─── Role styling ─────────────────────────────────────────────────────────────
 
-function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+const ROLE_LABEL: Record<string, string> = {
+  system:    "text-[#888888]",
+  user:      "text-[#0066CC]",
+  assistant: "text-[#1A8754]",
+};
+const ROLE_BOX: Record<string, string> = {
+  system:    "bg-[#F8F8F8] border border-[#E5E5E5]",
+  user:      "bg-[#F0F7FF] border border-[#C0D8F0]",
+  assistant: "bg-[#F0FBF4] border border-[#B2DFC4]",
+};
+
+function roleLabelClass(role: string): string { return ROLE_LABEL[role] ?? "text-muted-foreground"; }
+function roleBoxClass(role: string): string    { return ROLE_BOX[role]  ?? "bg-muted border border-border"; }
+
+// ─── Span icon ────────────────────────────────────────────────────────────────
+
+function SpanIcon({ span, isLlm }: { span: SpanNode; isLlm: boolean }) {
+  const name = span.name.toLowerCase();
+  if (span.statusCode === "error") return <Shield size={13} className="text-[#C41E3A] shrink-0" />;
+  if (isLlm || name.includes("llm") || name.includes("openai") || name.includes("anthropic") || name.includes("chat")) {
+    return <Cpu size={13} className="text-[#0066CC] shrink-0" />;
+  }
+  if (span.isRoot) return <Zap size={13} className="text-[#0066CC] shrink-0" />;
+  if (name.includes("db") || name.includes("database") || name.includes("query") || name.includes("sql")) {
+    return <Database size={13} className="text-[#555555] shrink-0" />;
+  }
+  if (name.includes("cache") || name.includes("redis") || name.includes("server")) {
+    return <Server size={13} className="text-[#999999] shrink-0" />;
+  }
+  return <Box size={13} className="text-[#999999] shrink-0" />;
+}
+
+// ─── Collapsible detail section ───────────────────────────────────────────────
+
+function DetailSection({
+  title,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-t first:border-t-0">
+    <div className="border-b last:border-b-0">
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 w-full px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground tracking-wider transition-colors"
+        className="flex items-center gap-2 w-full h-9 px-6 text-left hover:bg-muted/30 transition-colors"
       >
-        {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-        {title}
+        <ChevronDown
+          size={12}
+          className={cn("text-[#555555] transition-transform shrink-0", !open && "-rotate-90")}
+        />
+        <span className="text-[10px] font-semibold tracking-[1.5px] text-[#555555]">{title}</span>
       </button>
-      {open && <div className="px-4 pb-3">{children}</div>}
+      {open && children}
     </div>
   );
 }
 
-// ─── Attribute table ─────────────────────────────────────────────────────────
+// ─── Span detail panel ────────────────────────────────────────────────────────
 
-function AttributeTable({ attrs }: { attrs: Record<string, unknown> }) {
-  const entries = Object.entries(attrs);
-  if (entries.length === 0) return <p className="text-xs text-muted-foreground italic">No attributes</p>;
-  return (
-    <table className="w-full text-xs">
-      <tbody>
-        {entries.map(([k, v]) => (
-          <tr key={k} className="border-b last:border-b-0">
-            <td className="py-1.5 pr-3 text-muted-foreground font-mono align-top w-1/2 break-all">{k}</td>
-            <td className="py-1.5 text-foreground font-mono align-top break-all">{String(v)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-// ─── Span detail panel ───────────────────────────────────────────────────────
+const EXCLUDED_ATTR_KEYS = new Set([
+  "ai.prompt", "ai.completion",
+  "gen_ai.prompt", "gen_ai.completion",
+  "llm.prompts", "llm.completions",
+  "ai.prompts", "ai.completions",
+]);
 
 function SpanDetailPanel({
   span,
@@ -106,94 +164,151 @@ function SpanDetailPanel({
   observation: Observation | undefined;
   onClose: () => void;
 }) {
-  const attrs = (() => { try { return JSON.parse(span.attributes || "{}"); } catch { return {}; } })();
-  const messages = parsePrompt(observation?.prompt ?? null);
+  const rawAttrs = (() => {
+    try { return JSON.parse(span.attributes || "{}"); } catch { return {}; }
+  })();
+
+  const messages   = parsePrompt(observation?.prompt ?? null);
   const completion = observation?.completion ?? null;
+  const isLlm      = !!observation;
+
+  // Build structured attribute rows
+  const attrRows: { key: string; value: string; accent?: "green" | "red" }[] = [];
+  if (observation) {
+    if (observation.model)               attrRows.push({ key: "llm.model",                   value: observation.model });
+    if (observation.promptTokens != null) attrRows.push({ key: "llm.token_count.prompt",     value: observation.promptTokens.toLocaleString() });
+    if (observation.completionTokens != null) attrRows.push({ key: "llm.token_count.completion", value: observation.completionTokens.toLocaleString() });
+    if (observation.costUsd != null)     attrRows.push({ key: "llm.cost_usd",                value: `$${observation.costUsd.toFixed(6)}` });
+  }
+  const observationKeys = new Set(["llm.model", "llm.token_count.prompt", "llm.token_count.completion", "llm.cost_usd"]);
+  for (const [k, v] of Object.entries(rawAttrs)) {
+    if (EXCLUDED_ATTR_KEYS.has(k)) continue;
+    if (observation && observationKeys.has(k)) continue;
+    const str = typeof v === "object" ? JSON.stringify(v) : String(v ?? "");
+    const accent = (k.includes("finish_reason") && str === "stop") ? "green" as const
+                 : (k.includes("error") || k.includes("status") && str === "error") ? "red" as const
+                 : undefined;
+    attrRows.push({ key: k, value: str, accent });
+  }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto border-l bg-background">
-      {/* Panel header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b shrink-0">
-        <span className="text-sm font-semibold truncate flex-1">{span.name}</span>
-        {observation && (
-          <span className="text-[10px] font-medium bg-status-running-bg text-status-running-text px-2 py-0.5 rounded-full shrink-0">
-            LLM
-          </span>
-        )}
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+    <div className="flex flex-col h-full overflow-y-auto bg-background">
+      {/* Header */}
+      <div
+        className="flex items-center justify-between gap-2 px-6 bg-[#F8F8F8] border-b shrink-0"
+        style={{ height: 48 }}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          {isLlm
+            ? <Cpu size={14} className="text-[#0066CC] shrink-0" />
+            : <Box size={14} className="text-[#999999] shrink-0" />
+          }
+          <span className="text-[13px] font-semibold truncate text-[#111111]">{span.name}</span>
+          {isLlm && (
+            <span className="bg-[#0066CC12] text-[#0066CC] text-[10px] font-semibold px-2 py-0.5 shrink-0">
+              LLM
+            </span>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          className="text-[#999999] hover:text-foreground transition-colors shrink-0"
+        >
           <X size={14} />
         </button>
       </div>
 
-      {/* Attributes */}
-      <Section title="ATTRIBUTES">
-        <AttributeTable attrs={attrs} />
-        {observation && (
-          <table className="w-full text-xs mt-2">
-            <tbody>
-              {observation.model && (
-                <tr className="border-b"><td className="py-1.5 pr-3 text-muted-foreground font-mono">llm.model</td><td className="py-1.5 font-mono">{observation.model}</td></tr>
-              )}
-              {observation.promptTokens != null && (
-                <tr className="border-b"><td className="py-1.5 pr-3 text-muted-foreground font-mono">llm.tokens.prompt_tokens</td><td className="py-1.5 font-mono">{observation.promptTokens.toLocaleString()}</td></tr>
-              )}
-              {observation.completionTokens != null && (
-                <tr className="border-b"><td className="py-1.5 pr-3 text-muted-foreground font-mono">llm.tokens.prompt_completion</td><td className="py-1.5 font-mono">{observation.completionTokens.toLocaleString()}</td></tr>
-              )}
-              {observation.costUsd != null && (
-                <tr className="border-b"><td className="py-1.5 pr-3 text-muted-foreground font-mono">llm.cost_usd</td><td className="py-1.5 font-mono">${observation.costUsd.toFixed(6)}</td></tr>
-              )}
-            </tbody>
-          </table>
+      {/* ATTRIBUTES */}
+      <DetailSection title="ATTRIBUTES">
+        {attrRows.length === 0 ? (
+          <p className="px-6 pb-3 text-xs text-muted-foreground italic">No attributes</p>
+        ) : (
+          <div className="pb-3">
+            {attrRows.map((row, i) => (
+              <div
+                key={row.key}
+                className={cn(
+                  "flex items-center px-6",
+                  i % 2 === 1 ? "bg-[#F8F8F8]" : ""
+                )}
+                style={{ height: 32 }}
+              >
+                <span className="w-[180px] shrink-0 text-[11px] font-medium text-[#555555] truncate">
+                  {row.key}
+                </span>
+                <span className={cn(
+                  "text-[11px] truncate",
+                  row.accent === "green" ? "text-[#1A8754]"
+                  : row.accent === "red" ? "text-[#C41E3A]"
+                  : "text-[#111111]"
+                )}>
+                  {row.value}
+                </span>
+              </div>
+            ))}
+          </div>
         )}
-      </Section>
+      </DetailSection>
 
-      {/* INPUT — only for LLM spans */}
-      {observation && (
-        <Section title="INPUT">
+      {/* INPUT */}
+      {isLlm && (
+        <DetailSection title="INPUT">
           {messages.length > 0 ? (
-            <div className="flex flex-col gap-2">
+            <div className="px-6 pb-4 flex flex-col gap-3">
               {messages.map((msg, i) => (
-                <div key={i}>
-                  <div className="text-[10px] text-muted-foreground mb-1 font-medium">{msg.role}</div>
-                  <div className="text-xs border rounded-md px-2.5 py-2 whitespace-pre-wrap leading-relaxed bg-muted/40">
+                <div key={i} className="flex flex-col gap-1.5">
+                  <span className={cn(
+                    "text-[10px] font-semibold tracking-[1px] uppercase",
+                    roleLabelClass(msg.role)
+                  )}>
+                    {msg.role}
+                  </span>
+                  <div className={cn(
+                    "text-[11px] px-3 py-2.5 whitespace-pre-wrap leading-relaxed overflow-y-auto max-h-48",
+                    roleBoxClass(msg.role)
+                  )}>
                     {msg.content}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground italic">No prompt recorded</p>
+            <p className="px-6 pb-3 text-xs text-muted-foreground italic">No prompt recorded</p>
           )}
-        </Section>
+        </DetailSection>
       )}
 
-      {/* OUTPUT — only for LLM spans */}
-      {observation && (
-        <Section title="OUTPUT">
+      {/* OUTPUT */}
+      {isLlm && (
+        <DetailSection title="OUTPUT">
           {completion ? (
-            <div>
-              <div className="text-[10px] text-muted-foreground mb-1 font-medium">assistant</div>
-              <div className="text-xs border rounded-md px-2.5 py-2 whitespace-pre-wrap leading-relaxed bg-status-ok-bg/50">
+            <div className="px-6 pb-4 flex flex-col gap-1.5">
+              <span className="text-[10px] font-semibold tracking-[1px] uppercase text-[#1A8754]">
+                assistant
+              </span>
+              <div className="text-[11px] px-3 py-2.5 whitespace-pre-wrap leading-relaxed border border-[#B2DFC4] bg-[#F0FBF4] overflow-y-auto max-h-64">
                 {completion}
               </div>
-              {observation.totalTokens != null && (
-                <p className="text-[10px] text-muted-foreground mt-1.5">
-                  {observation.model} · {observation.totalTokens.toLocaleString()} tokens
-                </p>
-              )}
+              <div className="flex items-center gap-4 text-[10px] text-[#888888] mt-0.5">
+                {observation?.totalTokens != null && (
+                  <span>{observation.totalTokens.toLocaleString()} tokens</span>
+                )}
+                {observation?.model && <span>{observation.model}</span>}
+              </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground italic">No completion recorded</p>
+            <p className="px-6 pb-3 text-xs text-muted-foreground italic">No completion recorded</p>
           )}
-        </Section>
+        </DetailSection>
       )}
 
-      {/* Status message if any */}
+      {/* ERROR */}
       {span.statusMessage && (
-        <Section title="ERROR">
-          <p className="text-xs text-status-error font-mono whitespace-pre-wrap">{span.statusMessage}</p>
-        </Section>
+        <DetailSection title="ERROR" defaultOpen={true}>
+          <p className="px-6 pb-3 text-xs text-[#C41E3A] font-mono whitespace-pre-wrap">
+            {span.statusMessage}
+          </p>
+        </DetailSection>
       )}
     </div>
   );
@@ -204,81 +319,106 @@ function SpanDetailPanel({
 interface SpanNodeRowProps {
   node: SpanNode;
   depth: number;
-  observation: Observation | undefined;
+  obsBySpanId: Map<string, Observation>;
   onSelect: (span: SpanNode) => void;
   selectedId: string | null;
   forceExpand: boolean;
 }
 
-function SpanNodeRow({ node, depth, observation, onSelect, selectedId, forceExpand }: SpanNodeRowProps) {
+function SpanNodeRow({
+  node, depth, obsBySpanId, onSelect, selectedId, forceExpand,
+}: SpanNodeRowProps) {
   const [expanded, setExpanded] = useState(true);
   const hasChildren = node.children.length > 0;
-  const isSelected = selectedId === node.id;
-  const isError = node.statusCode === "error";
-  const isLlm = !!observation;
+  const isSelected  = selectedId === node.id;
+  const isError     = node.statusCode === "error";
+  const observation = obsBySpanId.get(node.id);
+  const isLlm       = !!observation;
+  const tokenCount  = observation?.totalTokens;
 
   useEffect(() => {
     if (forceExpand) setExpanded(true);
   }, [forceExpand]);
 
-  const tokenCount = observation?.totalTokens;
-
   return (
     <>
       <tr
         className={cn(
-          "cursor-pointer transition-colors group",
-          isSelected ? "bg-accent" : "hover:bg-muted/30"
+          "cursor-pointer transition-colors border-b group",
+          isSelected
+            ? "bg-[#0066CC08]"
+            : isError
+              ? "bg-[#FFF8F8] hover:bg-[#FFF0F0]"
+              : "hover:bg-muted/30"
         )}
         onClick={() => onSelect(node)}
       >
         {/* Span Name */}
-        <td className="py-2 pl-3 pr-2">
-          <div className="flex items-center gap-1" style={{ paddingLeft: depth * 16 }}>
+        <td className="py-0 pr-2" style={{ height: node.isRoot ? 48 : 44 }}>
+          <div
+            className="flex items-center gap-1.5 h-full"
+            style={{ paddingLeft: 24 + depth * 16 }}
+          >
+            {/* Expand/collapse toggle */}
             {hasChildren ? (
               <button
-                className="text-muted-foreground hover:text-foreground w-4 h-4 flex items-center justify-center shrink-0 rounded"
+                className="text-[#555555] hover:text-foreground w-[14px] h-[14px] flex items-center justify-center shrink-0"
                 onClick={e => { e.stopPropagation(); setExpanded(x => !x); }}
               >
                 {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               </button>
             ) : (
-              <span className="w-4 shrink-0" />
+              <span className="w-[14px] shrink-0" />
             )}
-            <span className={cn(
-              "text-xs font-mono truncate max-w-[240px]",
-              isError ? "text-status-error" : "text-foreground"
-            )}>
-              {node.name}
-            </span>
+
+            <SpanIcon span={node} isLlm={isLlm} />
+
+            <div className="flex flex-col justify-center gap-0.5 min-w-0">
+              <span className={cn(
+                "text-[13px] font-medium truncate max-w-[220px]",
+                isError ? "text-[#C41E3A]" : "text-[#111111]"
+              )}>
+                {node.name}
+              </span>
+              {isError && node.statusMessage && (
+                <span className="text-[11px] text-[#C41E3A]/70 truncate max-w-[220px]">
+                  {node.statusMessage}
+                </span>
+              )}
+            </div>
+
             {node.isRoot && (
-              <span className="text-[9px] font-medium bg-muted text-muted-foreground px-1.5 py-0.5 rounded shrink-0">ROOT</span>
+              <span className="text-[9px] font-semibold bg-muted text-muted-foreground px-1.5 py-0.5 shrink-0">
+                ROOT
+              </span>
             )}
             {isLlm && (
-              <span className="text-[9px] font-medium bg-status-running-bg text-status-running-text px-1.5 py-0.5 rounded shrink-0">LLM</span>
+              <span className="text-[9px] font-semibold bg-[#0066CC12] text-[#0066CC] px-1.5 py-0.5 shrink-0">
+                LLM
+              </span>
             )}
           </div>
-          {isError && node.statusMessage && (
-            <div className="ml-5 text-[11px] text-status-error/70 truncate max-w-[260px]" style={{ paddingLeft: depth * 16 }}>
-              {node.statusMessage}
-            </div>
-          )}
         </td>
 
         {/* Duration */}
-        <td className="py-2 px-3 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+        <td className="py-0 px-3 text-[13px] tabular-nums font-medium text-[#111111] whitespace-nowrap"
+            style={{ height: 44 }}>
           {node.durationMs >= 1000
             ? `${(node.durationMs / 1000).toFixed(2)}s`
             : `${Math.round(node.durationMs)}ms`}
         </td>
 
         {/* Tokens */}
-        <td className="py-2 px-3 text-xs tabular-nums text-muted-foreground">
-          {tokenCount != null ? tokenCount.toLocaleString() : "—"}
+        <td className="py-0 px-3 text-[13px] tabular-nums font-medium whitespace-nowrap"
+            style={{ height: 44 }}>
+          {tokenCount != null
+            ? <span className="text-[#111111]">{tokenCount.toLocaleString()}</span>
+            : <span className="text-[#CCCCCC]">—</span>
+          }
         </td>
 
         {/* Status */}
-        <td className="py-2 px-3">
+        <td className="py-0 px-3" style={{ height: 44 }}>
           <StatusBadge status={node.statusCode} />
         </td>
       </tr>
@@ -288,7 +428,7 @@ function SpanNodeRow({ node, depth, observation, onSelect, selectedId, forceExpa
           key={child.id}
           node={child}
           depth={depth + 1}
-          observation={undefined}
+          obsBySpanId={obsBySpanId}
           onSelect={onSelect}
           selectedId={selectedId}
           forceExpand={forceExpand}
@@ -310,24 +450,31 @@ interface SpanTreeProps {
 
 export function SpanTree({ spans, observations, expandAll, expandKey }: SpanTreeProps) {
   const [selected, setSelected] = useState<SpanNode | null>(null);
-  const tree = buildTree(spans);
-
+  const tree        = buildTree(spans);
   const obsBySpanId = new Map(observations.map(o => [o.spanId, o]));
 
-  function buildObsMap(node: SpanNode): Observation | undefined {
-    return obsBySpanId.get(node.id);
-  }
-
   return (
-    <div className={cn("flex gap-0 min-h-0", selected ? "divide-x" : "")}>
+    <div className={cn("flex min-h-0", selected ? "divide-x" : "")}>
       {/* Left: span tree */}
-      <div className={cn("overflow-auto", selected ? "flex-1" : "w-full")}>
-        <table className="w-full text-sm">
+      <div className={cn("overflow-auto", selected ? "flex-1 min-w-0" : "w-full")}>
+        <table className="w-full">
           <thead>
-            <tr className="border-b bg-muted/40">
-              {["SPAN NAME", "DURATION", "TOKENS", "STATUS"].map(h => (
-                <th key={h} className="text-left py-2 px-3 text-[11px] font-medium tracking-wide text-muted-foreground">
-                  {h}
+            <tr className="bg-[#F8F8F8] border-b">
+              {[
+                { label: "SPAN NAME" },
+                { label: "DURATION", w: "w-[100px]" },
+                { label: "TOKENS",   w: "w-[100px]" },
+                { label: "STATUS",   w: "w-[100px]" },
+              ].map(h => (
+                <th
+                  key={h.label}
+                  className={cn(
+                    "text-left h-9 px-3 text-[10px] font-semibold tracking-[1.5px] text-[#999999]",
+                    h.w,
+                    h.label === "SPAN NAME" && "pl-6"
+                  )}
+                >
+                  {h.label}
                 </th>
               ))}
             </tr>
@@ -335,14 +482,16 @@ export function SpanTree({ spans, observations, expandAll, expandKey }: SpanTree
           <tbody>
             {tree.length === 0 ? (
               <tr>
-                <td colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No spans</td>
+                <td colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                  No spans
+                </td>
               </tr>
             ) : tree.map(node => (
               <SpanNodeRow
                 key={`${node.id}-${expandKey}`}
                 node={node}
                 depth={0}
-                observation={buildObsMap(node)}
+                obsBySpanId={obsBySpanId}
                 onSelect={setSelected}
                 selectedId={selected?.id ?? null}
                 forceExpand={expandAll}
@@ -354,7 +503,7 @@ export function SpanTree({ spans, observations, expandAll, expandKey }: SpanTree
 
       {/* Right: detail panel */}
       {selected && (
-        <div className="w-80 xl:w-96 shrink-0">
+        <div className="w-[420px] xl:w-[480px] shrink-0">
           <SpanDetailPanel
             span={selected}
             observation={obsBySpanId.get(selected.id)}

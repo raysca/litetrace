@@ -86,12 +86,12 @@ function ObservationCard({ obs }: { obs: Observation }) {
       {/* Header row: model + provider + cost */}
       <div className="flex items-center gap-2 px-4 py-3 border-b">
         {obs.model && (
-          <span className={cn("text-xs font-medium px-2.5 py-0.5 rounded-full shrink-0", badgeClass)}>
+          <span className={cn("text-xs font-medium px-2.5 py-0.5  shrink-0", badgeClass)}>
             {obs.model}
           </span>
         )}
         {obs.provider && (
-          <span className="text-[10px] font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded-full shrink-0">
+          <span className="text-[10px] font-medium bg-muted text-muted-foreground px-2 py-0.5  shrink-0">
             {obs.provider}
           </span>
         )}
@@ -183,7 +183,7 @@ export function ObservationPanel({ observations }: { observations: Observation[]
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">LLM Calls</h2>
-        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 ">
           {observations.length} observation{observations.length !== 1 ? "s" : ""}
         </span>
       </div>

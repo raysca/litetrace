@@ -53,7 +53,7 @@ function VolumeChart({ data }: { data: { date: string; requests: number }[] }) {
             <rect
               x={x} y={y}
               width={barW} height={barH}
-              rx={3}
+              rx={0}
               className="fill-primary"
             />
             <text
@@ -202,9 +202,9 @@ export function Dashboard() {
                     <span className="text-xs font-mono text-foreground w-36 truncate shrink-0">
                       {m.model ?? "unknown"}
                     </span>
-                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-muted overflow-hidden">
                       <div
-                        className="h-full bg-primary rounded-full"
+                        className="h-full bg-primary"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -225,7 +225,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold">Recent Errors</h2>
             {stats && stats.recentErrors.length > 0 && (
-              <span className="text-[10px] font-medium bg-status-error-bg text-status-error-text px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-medium bg-status-error-bg text-status-error-text px-2 py-0.5">
                 {stats.recentErrors.reduce((s, e) => s + e.count, 0)} errors
               </span>
             )}
@@ -235,7 +235,7 @@ export function Dashboard() {
               {stats.recentErrors.map((e, i) => (
                 <div key={i} className="flex items-center justify-between gap-2 py-1">
                   <span className="text-xs font-mono text-status-error truncate">{e.name}</span>
-                  <span className="text-xs font-medium text-status-error-text bg-status-error-bg px-2 py-0.5 rounded-full shrink-0">
+                  <span className="text-xs font-medium text-status-error-text bg-status-error-bg px-2 py-0.5 shrink-0">
                     +{e.count}
                   </span>
                 </div>

@@ -42,7 +42,7 @@ export function Sidebar() {
           <Zap size={14} className="text-primary-foreground" />
         </div>
         <span className="font-semibold text-sm tracking-tight">LiteTrace</span>
-        <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">MVP</span>
+        <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5">MVP</span>
       </div>
 
       {/* Nav */}
