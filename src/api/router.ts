@@ -1,21 +1,13 @@
 import { handleListTraces, handleGetTrace } from "./handlers/traces";
 import { handleGetSpan } from "./handlers/spans";
-import { handleNorthwindQuery } from "./handlers/northwind";
 import { handleSeed } from "./handlers/seed";
-import { handleChat } from "./handlers/chat";
 import { handleListObservations, handleGetTraceObservations } from "./handlers/observations";
 import { handleDashboardStats } from "./handlers/dashboard";
 import { handleAnalyticsStats } from "./handlers/analytics";
 import { handleGetServices } from "./handlers/services";
-import { notFound } from "./errors";
 
 export function createApiRoutes() {
   return {
-    "/api/northwind/:entity": {
-      async GET(req: Request & { params: { entity: string } }) {
-        return handleNorthwindQuery(req, req.params.entity);
-      },
-    },
     "/api/traces": {
       async GET(req: Request) {
         return handleListTraces(req);
@@ -34,11 +26,6 @@ export function createApiRoutes() {
     "/api/debug/seed": {
       async POST(req: Request) {
         return handleSeed(req);
-      },
-    },
-    "/api/chat": {
-      async POST(req: Request) {
-        return handleChat(req);
       },
     },
     "/api/observations": {

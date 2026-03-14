@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
-import { RefreshCw, Calendar, ChevronDown } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { DashboardEmpty } from "../components/DashboardEmpty";
+import { TimeRangePicker } from "../components/TimeRangePicker";
+import { BarChart } from "../components/BarChart";
+
+interface VolumeDay {
+  date: string;
+  requests: number;
+  tokens: number;
+  costUsd: number;
+  avgLatencyMs: number;
+}
 
 interface DashboardStats {
   totalTraces: number;
@@ -9,7 +19,7 @@ interface DashboardStats {
   totalTokens: number;
   avgLatencyMs: number;
   byModel: { model: string | null; totalCost: number; totalTokens: number; callCount: number }[];
-  volumeByDay: { date: string; requests: number }[];
+  volumeByDay: VolumeDay[];
   recentErrors: { name: string; count: number }[];
 }
 
@@ -26,54 +36,52 @@ function formatLatency(ms: number): string {
   return `${Math.round(ms)}ms`;
 }
 
-type VolumeMetric = "requests" | "tokens" | "cost" | "latency";
+type VolumeMetric = "requests" | "tokens" | "costUsd" | "avgLatencyMs";
 
-function VolumeChart({ data }: { data: { date: string; requests: number }[] }) {
-  if (data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-        No data
-      </div>
-    );
-  }
-  const max = Math.max(...data.map(d => d.requests), 1);
-  const chartH = 120;
-  const barW = 28;
-  const gap = 12;
-  const totalW = data.length * (barW + gap) - gap;
-
-  return (
-    <svg viewBox={`0 0 ${totalW} ${chartH}`} className="w-full" style={{ height: chartH }}>
-      {data.map((d, i) => {
-        const barH = Math.max(4, (d.requests / max) * (chartH - 20));
-        const x = i * (barW + gap);
-        const y = chartH - barH - 18;
-        return (
-          <g key={d.date}>
-            <rect x={x} y={y} width={barW} height={barH} rx={0} className="fill-primary" />
-            <text
-              x={x + barW / 2} y={chartH - 4}
-              textAnchor="middle" fontSize={9}
-              className="fill-muted-foreground"
-            >
-              {d.date.slice(5)}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
+const METRIC_CONFIG: Record<VolumeMetric, {
+  label: string;
+  color: string;
+  formatTick: (v: number) => string;
+  formatTooltip: (v: number) => string;
+}> = {
+  requests: {
+    label: "Requests",
+    color: "#3b82f6",
+    formatTick: (v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v),
+    formatTooltip: (v) => `${v} requests`,
+  },
+  tokens: {
+    label: "Tokens",
+    color: "#8b5cf6",
+    formatTick: (v) => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v),
+    formatTooltip: (v) => `${formatNumber(v)} tokens`,
+  },
+  costUsd: {
+    label: "Cost",
+    color: "#10b981",
+    formatTick: (v) => v === 0 ? "$0" : v < 0.01 ? `$${v.toFixed(4)}` : `$${v.toFixed(2)}`,
+    formatTooltip: (v) => `$${v.toFixed(4)}`,
+  },
+  avgLatencyMs: {
+    label: "Latency",
+    color: "#f59e0b",
+    formatTick: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}s` : `${Math.round(v)}ms`,
+    formatTooltip: (v) => formatLatency(v),
+  },
+};
 
 export function Dashboard() {
+  const now = Date.now();
+  const [from, setFrom] = useState(now - 7 * 24 * 60 * 60 * 1000);
+  const [to, setTo] = useState(now);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [volumeMetric, setVolumeMetric] = useState<VolumeMetric>("requests");
 
-  async function load() {
+  async function load(f = from, t = to) {
     setRefreshing(true);
     try {
-      const r = await fetch("/api/dashboard/stats");
+      const r = await fetch(`/api/dashboard/stats?from=${f}&to=${t}`);
       const data = await r.json();
       setStats(data);
     } catch (err) {
@@ -84,6 +92,12 @@ export function Dashboard() {
   }
 
   useEffect(() => { load(); }, []);
+
+  function handleRangeChange(f: number, t: number) {
+    setFrom(f);
+    setTo(t);
+    load(f, t);
+  }
 
   const totalModelCalls = stats?.byModel.reduce((s, m) => s + m.callCount, 0) ?? 0;
 
@@ -104,12 +118,11 @@ export function Dashboard() {
     { ordinal: "04", label: "AVG LATENCY", value: formatLatency(stats.avgLatencyMs) },
   ] : [];
 
-  const volumeTabs: { id: VolumeMetric; label: string }[] = [
-    { id: "requests", label: "Requests" },
-    { id: "tokens", label: "Tokens" },
-    { id: "cost", label: "Cost" },
-    { id: "latency", label: "Latency" },
-  ];
+  const mc = METRIC_CONFIG[volumeMetric];
+  const chartData = (stats?.volumeByDay ?? []).map(d => ({
+    ...d,
+    label: d.date.slice(5), // MM-DD
+  }));
 
   return (
     <div className="flex flex-col gap-0">
@@ -118,17 +131,13 @@ export function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Last 7 days{activeModels ? ` · ${activeModels}` : ""}
+            {activeModels ? activeModels : "All models"}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded text-foreground hover:bg-muted transition-colors">
-            <Calendar size={12} className="text-muted-foreground" />
-            Last 7 days
-            <ChevronDown size={12} className="text-muted-foreground" />
-          </button>
+          <TimeRangePicker from={from} to={to} onChange={handleRangeChange} />
           <button
-            onClick={load}
+            onClick={() => load()}
             disabled={refreshing}
             className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors disabled:opacity-60"
           >
@@ -138,7 +147,7 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Stat cards — single container with dividers */}
+      {/* Stat cards */}
       <div className="border-b border-border">
         {stats ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-border">
@@ -170,24 +179,32 @@ export function Dashboard() {
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-bold">Request Volume</h2>
           <div className="flex items-center border border-border rounded overflow-hidden">
-            {volumeTabs.map(tab => (
+            {(Object.keys(METRIC_CONFIG) as VolumeMetric[]).map(id => (
               <button
-                key={tab.id}
-                onClick={() => setVolumeMetric(tab.id)}
+                key={id}
+                onClick={() => setVolumeMetric(id)}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  volumeMetric === tab.id
+                  volumeMetric === id
                     ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
-                {tab.label}
+                {METRIC_CONFIG[id].label}
               </button>
             ))}
           </div>
         </div>
-        <div className="h-[140px] flex items-end">
+        <div className="h-[160px]">
           {stats ? (
-            <VolumeChart data={stats.volumeByDay} />
+            <BarChart
+              data={chartData}
+              xKey="label"
+              yKey={volumeMetric}
+              color={mc.color}
+              formatTick={mc.formatTick}
+              formatTooltip={mc.formatTooltip}
+              height={160}
+            />
           ) : (
             <div className="w-full h-full animate-pulse bg-muted rounded" />
           )}

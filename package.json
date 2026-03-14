@@ -7,11 +7,7 @@
     "dev": "bun --hot src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts",
     "build": "bun run build.ts",
-    "chat:list-customers": "curl -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"messages\": [{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"text\":\"list 5 customers\"}],\"id\":\"gX57Js6m7UdEs6o9\"}]}'",
-    "chat:last-order-employee": "curl -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"messages\": [{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"text\":\"list last order for employee Margaret Peacock\"}],\"id\":\"sdsdffs\"}]}'",
-    "chat:order-details": "curl -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"messages\": [{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"text\":\"list order details for order 10248\"}],\"id\":\"sdsdffs\"}]}'",
-    "test:northwind-customers": "curl http://localhost:3000/api/northwind/customers?limit=3",
-    "test:northwind-orders": "curl http://localhost:3000/api/northwind/orders?limit=3"
+    "seed": "curl -X POST http://localhost:3000/api/debug/seed"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.41",

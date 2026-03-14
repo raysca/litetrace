@@ -76,9 +76,15 @@ export function TraceList() {
   const navigate = useNavigate({ from: "/traces" });
   const [search, setSearch] = useState("");
 
+  const [hasFilters, setHasFilters] = useState(false);
   const { items, total, limit, offset, loading, error, setPage, setFilters, refresh } =
     useTraces(PAGE_SIZE);
   const refreshing = loading;
+
+  function handleFilter(f: Parameters<typeof setFilters>[0]) {
+    setHasFilters(Object.values(f).some(v => v !== undefined && v !== ""));
+    setFilters(f);
+  }
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const currentPage = Math.floor(offset / limit) + 1;
@@ -136,10 +142,10 @@ export function TraceList() {
         </div>
       </div>
 
-      {!loading && total === 0 ? <TracesEmpty /> : (<>
+      {!loading && total === 0 && !hasFilters ? <TracesEmpty /> : (<>
 
       {/* Trace Filter Bar */}
-      <TraceFilterBar onFilter={setFilters} onRefresh={refresh} />
+      <TraceFilterBar onFilter={handleFilter} onRefresh={refresh} />
 
       {error && (
         <div className="text-sm text-status-error-text bg-status-error-bg border border-status-error/20 rounded-md px-3 py-2">

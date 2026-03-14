@@ -55,7 +55,7 @@ costs:
   qwen2:            [0.0,    0.0]
   deepseek-r1:      [0.0,    0.0]
   deepseek-coder:   [0.0,    0.0]
-  gemma3:           [0.0,    0.0]
+  google/gemma-3n-e4b:     [0.3,    0.25]
   gemma2:           [0.0,    0.0]
   phi4:             [0.0,    0.0]
   phi3:             [0.0,    0.0]
