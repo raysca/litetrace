@@ -354,49 +354,56 @@ function SpanNodeRow({
         onClick={() => onSelect(node)}
       >
         {/* Span Name */}
-        <td className="py-0 pr-2" style={{ height: node.isRoot ? 48 : 44 }}>
+        <td className="py-2 pr-2" style={{ minHeight: node.isRoot ? 48 : 44 }}>
           <div
-            className="flex items-center gap-1.5 h-full"
+            className="flex items-start gap-1.5 h-full"
             style={{ paddingLeft: 24 + depth * 16 }}
           >
             {/* Expand/collapse toggle */}
-            {hasChildren ? (
-              <button
-                className="text-[#555555] hover:text-foreground w-[14px] h-[14px] flex items-center justify-center shrink-0"
-                onClick={e => { e.stopPropagation(); setExpanded(x => !x); }}
-              >
-                {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-              </button>
-            ) : (
-              <span className="w-[14px] shrink-0" />
-            )}
+            <div className="flex items-center h-5">
+              {hasChildren ? (
+                <button
+                  className="text-[#555555] hover:text-foreground w-[14px] h-[14px] flex items-center justify-center shrink-0"
+                  onClick={e => { e.stopPropagation(); setExpanded(x => !x); }}
+                >
+                  {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                </button>
+              ) : (
+                <span className="w-[14px] shrink-0" />
+              )}
+            </div>
 
-            <SpanIcon span={node} isLlm={isLlm} />
+            <div className="flex items-center h-5">
+              <SpanIcon span={node} isLlm={isLlm} />
+            </div>
 
-            <div className="flex flex-col justify-center gap-0.5 min-w-0">
+            <div className="flex flex-col justify-start gap-1 min-w-0 mt-0.5">
               <span className={cn(
-                "text-[13px] font-medium truncate max-w-[220px]",
+                "text-[13px] font-medium truncate max-w-[220px] leading-none",
                 isError ? "text-[#C41E3A]" : "text-[#111111]"
               )}>
                 {node.name}
               </span>
-              {isError && node.statusMessage && (
-                <span className="text-[11px] text-[#C41E3A]/70 truncate max-w-[220px]">
-                  {node.statusMessage}
-                </span>
+              {(node.isRoot || isLlm || (isError && node.statusMessage)) && (
+                <div className="flex items-center gap-1.5">
+                  {node.isRoot && (
+                    <span className="text-[9px] leading-none font-semibold bg-[#0066CC12] text-[#0066CC] px-1 py-0.5 shrink-0">
+                      ROOT
+                    </span>
+                  )}
+                  {isLlm && (
+                    <span className="text-[9px] leading-none font-semibold bg-[#0066CC12] text-[#0066CC] px-1 py-0.5 shrink-0">
+                      LLM
+                    </span>
+                  )}
+                  {isError && node.statusMessage && (
+                    <span className="text-[11px] text-[#C41E3A]/70 truncate max-w-[220px]">
+                      {node.statusMessage}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
-
-            {node.isRoot && (
-              <span className="text-[9px] font-semibold bg-muted text-muted-foreground px-1.5 py-0.5 shrink-0">
-                ROOT
-              </span>
-            )}
-            {isLlm && (
-              <span className="text-[9px] font-semibold bg-[#0066CC12] text-[#0066CC] px-1.5 py-0.5 shrink-0">
-                LLM
-              </span>
-            )}
           </div>
         </td>
 

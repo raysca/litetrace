@@ -5,10 +5,12 @@ import { SpanTimeline } from "../components/SpanTimeline";
 import { ObservationPanel } from "../components/ObservationPanel";
 import { StatusBadge } from "../components/StatusBadge";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ChevronRight, ListTree, Timer } from "lucide-react";
+import { ChevronRight, ChevronLeft, ListTree, Timer, Copy, Cpu } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 type Tab = "tree" | "timeline" | "llm";
+
+const LORA: React.CSSProperties = { fontFamily: "'Lora', Georgia, serif" };
 
 function formatLatency(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(2)}s`;
@@ -16,20 +18,59 @@ function formatLatency(ms: number): string {
 }
 
 function formatTimestamp(unixMicros: number): string {
-  return new Date(unixMicros / 1000).toISOString().replace("T", " · ").replace(/\.\d{3}Z$/, " UTC");
+  return new Date(unixMicros / 1000)
+    .toISOString()
+    .replace("T", " · ")
+    .replace(/\.\d{3}Z$/, " UTC");
 }
 
 function truncateId(id: string): string {
   return id.length > 20 ? `trc_${id.slice(0, 16)}…` : id;
 }
 
+function MetaCell({
+  label,
+  children,
+  divider = true,
+  width,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  divider?: boolean;
+  width?: number | string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col justify-center gap-1 h-full",
+        divider && "border-r border-[#E5E5E5]",
+        className
+      )}
+      style={width ? { width, minWidth: width } : undefined}
+    >
+      <span className="text-[10px] uppercase text-[#999999] tracking-[1.5px] font-semibold leading-none">
+        {label}
+      </span>
+      <div className="flex items-center">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── TraceDetail ─────────────────────────────────────────────────────────────
+
 export function TraceDetail() {
   const { traceId } = useParams({ from: "/traces/$traceId" });
   const navigate = useNavigate({ from: "/traces/$traceId" });
   const { data, loading, error } = useTrace(traceId);
+
   const [tab, setTab] = useState<Tab>("tree");
   const [expandAll, setExpandAll] = useState(false);
   const [expandKey, setExpandKey] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   if (loading) {
     return (
@@ -52,7 +93,7 @@ export function TraceDetail() {
   const { trace, spans, observations } = data;
 
   const totalTokens = observations.reduce((s, o) => s + (o.totalTokens ?? 0), 0);
-  const totalCost   = observations.reduce((s, o) => s + (o.costUsd   ?? 0), 0);
+  const totalCost = observations.reduce((s, o) => s + (o.costUsd ?? 0), 0);
   const primaryModel = observations[0]?.model ?? null;
 
   function handleExpandAll() {
@@ -60,66 +101,110 @@ export function TraceDetail() {
     setExpandKey(k => k + 1);
   }
 
-  const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-    { id: "tree",     label: "Tree View", icon: ListTree },
-    { id: "timeline", label: "Timeline",  icon: Timer },
+  function handleCopyId() {
+    navigator.clipboard.writeText(traceId).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  // Build the flat tab list — LLM tab only when there are observations
+  const tabs: { id: Tab; label: string; icon: React.ElementType | null; badge?: number }[] = [
+    { id: "tree", label: "Tree View", icon: ListTree },
+    { id: "timeline", label: "Timeline", icon: Timer },
+    ...(observations.length > 0
+      ? [{ id: "llm" as Tab, label: "LLM", icon: Cpu, badge: observations.length }]
+      : []),
   ];
 
   return (
-    <div className="flex flex-col gap-0 -mx-8 -mt-6">
+    <div className="flex flex-col -mx-8 -mt-6">
 
-      {/* ── Breadcrumb header ─────────────────────────────── */}
-      <div className="flex items-center justify-between px-6 border-b" style={{ height: 56 }}>
-        <div className="flex items-center gap-1.5 text-sm">
+      {/* ── Top bar: breadcrumb + Copy ID ─────────────────── */}
+      <div
+        className="flex items-center justify-between px-6 border-b bg-white"
+        style={{ height: 56 }}
+      >
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-1.5 text-[13px]">
           <button
             onClick={() => navigate({ to: "/traces" })}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-[#999999] hover:text-[#111111] transition-colors"
           >
             Traces
           </button>
-          <ChevronRight size={14} className="text-muted-foreground/50" />
-          <span className="font-mono text-xs text-foreground">{truncateId(traceId)}</span>
+          <ChevronRight size={13} className="text-[#CCCCCC]" />
+          <span className="font-mono text-[12px] text-[#111111]">
+            {truncateId(traceId)}
+          </span>
+        </div>
+
+        {/* Right controls */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center">
+            <button className="flex items-center justify-center w-7 h-7 text-[#555555] border border-[#E5E5E5] hover:border-[#999999] transition-colors bg-white">
+              <ChevronLeft size={13} />
+            </button>
+            <button className="flex items-center justify-center w-7 h-7 text-[#555555] border border-[#E5E5E5] hover:border-[#999999] transition-colors bg-white -ml-px">
+              <ChevronRight size={13} />
+            </button>
+          </div>
+          <button
+            onClick={handleCopyId}
+            className="flex items-center gap-1.5 h-7 px-3 text-[11px] text-[#555555] border border-[#E5E5E5] hover:border-[#999999] transition-colors bg-white"
+          >
+            <Copy size={11} />
+            {copied ? "Copied!" : "Copy ID"}
+          </button>
         </div>
       </div>
 
-      {/* ── Trace meta strip ──────────────────────────────── */}
-      <div className="flex items-center border-b" style={{ height: 80 }}>
-        {/* STATUS */}
-        <div className="flex flex-col gap-1 px-8 border-r h-full justify-center" style={{ minWidth: 160 }}>
-          <span className="text-[10px] font-semibold tracking-[1.5px] text-[#999999]">STATUS</span>
+      {/* ── Meta strip ────────────────────────────────────── */}
+      <div className="flex items-center border-b bg-white" style={{ height: 80, paddingLeft: 32, paddingRight: 32 }}>
+
+        <MetaCell label="Status" width={180} className="pr-8">
           <StatusBadge status={trace.status} />
-        </div>
-        {/* MODEL */}
-        <div className="flex flex-col gap-1 px-8 border-r h-full justify-center" style={{ minWidth: 160 }}>
-          <span className="text-[10px] font-semibold tracking-[1.5px] text-[#999999]">MODEL</span>
-          <span className="text-[13px] font-medium text-[#111111]">{primaryModel ?? "—"}</span>
-        </div>
-        {/* TOTAL TOKENS */}
-        <div className="flex flex-col gap-1 px-8 border-r h-full justify-center" style={{ minWidth: 140 }}>
-          <span className="text-[10px] font-semibold tracking-[1.5px] text-[#999999]">TOTAL TOKENS</span>
-          <span className="text-[18px] font-medium text-[#111111] leading-tight tabular-nums">
+        </MetaCell>
+
+        <MetaCell label="Model" width={180} className="px-8">
+          <span className="text-[13px] font-medium text-[#111111] truncate">
+            {primaryModel ?? "—"}
+          </span>
+        </MetaCell>
+
+        <MetaCell label="Total Tokens" width={160} className="px-8">
+          <span
+            className="text-[18px] font-medium text-[#111111] leading-none tabular-nums"
+            style={LORA}
+          >
             {totalTokens > 0 ? totalTokens.toLocaleString() : "—"}
           </span>
-        </div>
-        {/* COST */}
-        <div className="flex flex-col gap-1 px-8 border-r h-full justify-center" style={{ minWidth: 120 }}>
-          <span className="text-[10px] font-semibold tracking-[1.5px] text-[#999999]">COST</span>
-          <span className="text-[18px] font-medium text-[#111111] leading-tight tabular-nums">
+        </MetaCell>
+
+        <MetaCell label="Cost" width={140} className="px-8">
+          <span
+            className="text-[18px] font-medium text-[#111111] leading-none tabular-nums"
+            style={LORA}
+          >
             {totalCost > 0 ? `$${totalCost.toFixed(4)}` : "—"}
           </span>
-        </div>
-        {/* LATENCY */}
-        <div className="flex flex-col gap-1 px-8 border-r h-full justify-center" style={{ minWidth: 120 }}>
-          <span className="text-[10px] font-semibold tracking-[1.5px] text-[#999999]">LATENCY</span>
-          <span className="text-[18px] font-medium text-[#111111] leading-tight tabular-nums">
+        </MetaCell>
+
+        <MetaCell label="Latency" width={140} className="px-8">
+          <span
+            className="text-[18px] font-medium text-[#111111] leading-none tabular-nums"
+            style={LORA}
+          >
             {formatLatency(trace.durationMs)}
           </span>
-        </div>
-        {/* TIMESTAMP */}
-        <div className="flex flex-col gap-1 px-8 h-full justify-center flex-1">
-          <span className="text-[10px] font-semibold tracking-[1.5px] text-[#999999]">TIMESTAMP</span>
-          <span className="text-[13px] text-[#555555]">{formatTimestamp(trace.startTime)}</span>
-        </div>
+        </MetaCell>
+
+        <MetaCell label="Timestamp" divider={false} className="pl-8 !w-auto flex-1">
+          <span className="text-[13px] font-normal text-[#555555] whitespace-nowrap">
+            {formatTimestamp(trace.startTime)}
+          </span>
+        </MetaCell>
+
       </div>
 
       {/* ── View toggle bar ───────────────────────────────── */}
@@ -127,47 +212,37 @@ export function TraceDetail() {
         className="flex items-center justify-between px-8 bg-[#F8F8F8] border-b"
         style={{ height: 48 }}
       >
-        {/* Tab toggles */}
-        <div className="flex items-center">
-          {TABS.map(t => {
-            const Icon = t.icon;
+        {/* Flush button group */}
+        <div className="flex items-center gap-2">
+          {tabs.map((t, i) => {
             const active = tab === t.id;
+            const Icon = t.icon;
             return (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-4 h-8 text-[11px] font-semibold transition-colors",
+                  "flex items-center gap-1.5 px-4 py-2 h-[34px] text-[11px] font-semibold transition-colors whitespace-nowrap",
                   active
-                    ? "bg-[#111111] text-white"
-                    : "text-[#999999] border border-[#CCCCCC] hover:text-foreground hover:border-[#999999]"
+                    ? "bg-[#111111] text-white border border-transparent"
+                    : "text-[#999999] border border-[#CCCCCC] font-normal hover:text-[#555555] hover:border-[#999999]"
                 )}
               >
-                <Icon size={13} />
+                {Icon && <Icon size={13} className={active ? "text-white" : "text-[#999999]"} />}
                 {t.label}
+                {t.badge != null && (
+                  <span className={cn(
+                    "ml-0.5 px-1.5 py-px text-[10px] tabular-nums font-medium",
+                    active
+                      ? "bg-white/20 text-white"
+                      : "bg-[#0066CC12] text-[#0066CC]"
+                  )}>
+                    {t.badge}
+                  </span>
+                )}
               </button>
             );
           })}
-          {/* LLM tab with count */}
-          {observations.length > 0 && (
-            <button
-              onClick={() => setTab("llm")}
-              className={cn(
-                "flex items-center gap-1.5 px-4 h-8 text-[11px] font-semibold transition-colors",
-                tab === "llm"
-                  ? "bg-[#111111] text-white"
-                  : "text-[#999999] border border-[#CCCCCC] hover:text-foreground hover:border-[#999999]"
-              )}
-            >
-              LLM
-              <span className={cn(
-                "text-[10px] px-1.5 py-0.5 tabular-nums",
-                tab === "llm" ? "bg-white/20 text-white" : "bg-[#0066CC12] text-[#0066CC]"
-              )}>
-                {observations.length}
-              </span>
-            </button>
-          )}
         </div>
 
         {/* Right controls */}
@@ -186,7 +261,7 @@ export function TraceDetail() {
         </div>
       </div>
 
-      {/* ── Content area ──────────────────────────────────── */}
+      {/* ── Content ───────────────────────────────────────── */}
       {tab === "tree" && (
         <SpanTree
           spans={spans}
@@ -197,19 +272,19 @@ export function TraceDetail() {
         />
       )}
       {tab === "timeline" && (
-        <div className="px-6 pt-4">
-          <SpanTimeline
-            spans={spans}
-            traceStartTime={trace.startTime}
-            traceEndTime={trace.endTime}
-          />
-        </div>
+        <SpanTimeline
+          spans={spans}
+          observations={observations}
+          traceStartTime={trace.startTime}
+          traceEndTime={trace.endTime}
+        />
       )}
       {tab === "llm" && (
         <div className="px-6 pt-4">
           <ObservationPanel observations={observations} />
         </div>
       )}
+
     </div>
   );
 }

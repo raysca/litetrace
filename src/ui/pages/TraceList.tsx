@@ -5,6 +5,7 @@ import { useTraces } from "../hooks/useTraces";
 import { StatusBadge } from "../components/StatusBadge";
 import { RefreshControl } from "../components/RefreshControl";
 import { TraceFilterBar } from "../components/filters/TraceFilterBar";
+import { TracesEmpty } from "../components/TracesEmpty";
 import { cn } from "../../lib/utils";
 
 const PAGE_SIZE = 20;
@@ -135,6 +136,8 @@ export function TraceList() {
         </div>
       </div>
 
+      {!loading && total === 0 ? <TracesEmpty /> : (<>
+
       {/* Trace Filter Bar */}
       <TraceFilterBar onFilter={setFilters} onRefresh={refresh} />
 
@@ -254,6 +257,8 @@ export function TraceList() {
           </PaginationButton>
         </div>
       </div>
+
+      </>)}
     </div>
   );
 }

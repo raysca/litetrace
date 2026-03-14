@@ -4,6 +4,7 @@ import {
   createRouter,
   createHashHistory,
   Outlet,
+  redirect,
 } from "@tanstack/react-router";
 import { Layout } from "./layout/Layout";
 import { Dashboard } from "./pages/Dashboard";
@@ -12,8 +13,17 @@ import { TraceDetail } from "./pages/TraceDetail";
 import { Alerts } from "./pages/Alerts";
 import { Analytics } from "./pages/Analytics";
 import { Settings } from "./pages/Settings";
+import { WelcomePage } from "./pages/WelcomePage";
 
 const rootRoute = createRootRoute({
+  beforeLoad: ({ location }) => {
+    if (
+      !localStorage.getItem("litetrace_welcomed") &&
+      location.pathname !== "/welcome"
+    ) {
+      throw redirect({ to: "/welcome" });
+    }
+  },
   component: () => (
     <Layout>
       <Outlet />
@@ -58,6 +68,12 @@ const settingsRoute = createRoute({
 });
 
 
+const welcomeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/welcome",
+  component: WelcomePage,
+});
+
 const routeTree = rootRoute.addChildren([
   dashboardRoute,
   tracesRoute,
@@ -65,6 +81,7 @@ const routeTree = rootRoute.addChildren([
   alertsRoute,
   analyticsRoute,
   settingsRoute,
+  welcomeRoute,
 ]);
 
 export const router = createRouter({

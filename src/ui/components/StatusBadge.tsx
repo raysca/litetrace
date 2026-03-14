@@ -6,8 +6,8 @@ interface StatusBadgeProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  ok:    "bg-status-ok-bg text-status-ok-text",
-  error: "bg-status-error-bg text-status-error-text",
+  ok:    "bg-[#1A875420] text-[#1A8754]",
+  error: "bg-[#C41E3A20] text-[#C41E3A]",
   unset: "bg-muted text-muted-foreground",
 };
 
@@ -23,7 +23,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center px-2 py-[3px] text-[11px] font-semibold tracking-wide uppercase",
         style,
         className
       )}
