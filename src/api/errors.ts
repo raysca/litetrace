@@ -1,4 +1,4 @@
-type ErrorCode = "NOT_FOUND" | "INVALID_PARAMS" | "INTERNAL_ERROR";
+type ErrorCode = "NOT_FOUND" | "INVALID_PARAMS" | "INTERNAL_ERROR" | "UNAUTHORIZED";
 
 export function errorResponse(code: ErrorCode, message: string, status: number): Response {
   return Response.json({ error: { code, message } }, { status });
@@ -14,4 +14,8 @@ export function invalidParams(message: string): Response {
 
 export function internalError(message = "Internal server error"): Response {
   return errorResponse("INTERNAL_ERROR", message, 500);
+}
+
+export function unauthorized(message = "Unauthorized"): Response {
+  return errorResponse("UNAUTHORIZED", message, 401);
 }

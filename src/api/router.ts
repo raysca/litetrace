@@ -5,6 +5,7 @@ import { handleListObservations, handleGetTraceObservations } from "./handlers/o
 import { handleDashboardStats } from "./handlers/dashboard";
 import { handleAnalyticsStats } from "./handlers/analytics";
 import { handleGetServices } from "./handlers/services";
+import { handleListKeys, handleCreateKey, handleDeleteKey } from "./handlers/keys";
 
 export function createApiRoutes() {
   return {
@@ -51,6 +52,19 @@ export function createApiRoutes() {
     "/api/services": {
       async GET(req: Request) {
         return handleGetServices(req);
+      },
+    },
+    "/api/keys": {
+      async GET(req: Request) {
+        return handleListKeys(req);
+      },
+      async POST(req: Request) {
+        return handleCreateKey(req);
+      },
+    },
+    "/api/keys/:id": {
+      async DELETE(req: Request & { params: { id: string } }) {
+        return handleDeleteKey(req);
       },
     },
   };
