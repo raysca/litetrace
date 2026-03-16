@@ -2,7 +2,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Activity,
-  Bell,
   BarChart2,
   Settings,
   Zap,
@@ -14,15 +13,13 @@ interface NavItem {
   icon: React.ElementType;
   to: string;
   exact?: boolean;
-  soon?: boolean;
 }
 
 const NAV: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard, to: "/",          exact: true, soon: true },
+  { label: "Dashboard", icon: LayoutDashboard, to: "/",          exact: true },
   { label: "Traces",    icon: Activity,        to: "/traces" },
-  { label: "Alerts",    icon: Bell,            to: "/alerts",    soon: true },
-  { label: "Analytics", icon: BarChart2,       to: "/analytics", soon: true },
-  { label: "Settings",  icon: Settings,        to: "/settings",  soon: true },
+  { label: "Analytics", icon: BarChart2,       to: "/analytics" },
+  { label: "Settings",  icon: Settings,        to: "/settings" },
 ];
 
 export function Sidebar() {
@@ -63,9 +60,6 @@ export function Sidebar() {
             >
               <Icon size={16} />
               <span>{item.label}</span>
-              {item.soon && !active && (
-                <span className="ml-auto text-[10px] text-muted-foreground/60">soon</span>
-              )}
             </Link>
           );
         })}
