@@ -1,6 +1,7 @@
 import { convertOtlpProto } from "../processor/otlp-proto-converter";
 import type { TraceProcessor } from "../processor/trace-processor";
 import { config } from "../config";
+import { extractBearerToken, validateApiKey } from "../api/auth";
 
 // gRPC over HTTP/2 uses 5-byte length-prefixed framing:
 // [1 byte compress flag][4 bytes big-endian message length][message bytes]
@@ -50,6 +51,20 @@ export function startGrpcReceiver(processor: TraceProcessor) {
         return new Response(null, {
           status: 415,
           headers: { "content-type": "application/grpc", "grpc-status": "3" },
+        });
+      }
+
+      // Auth: gRPC clients send authorization as a lowercase header per HTTP/2 spec
+      const token  = extractBearerToken(req);
+      const authed = await validateApiKey(token ?? "");
+      if (!authed) {
+        return new Response(null, {
+          status: 401,
+          headers: {
+            "content-type": "application/grpc",
+            "grpc-status": "16",          // UNAUTHENTICATED
+            "grpc-message": "Unauthenticated — provide a valid API key as Bearer token",
+          },
         });
       }
 

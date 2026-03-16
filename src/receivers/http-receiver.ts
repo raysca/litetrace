@@ -2,6 +2,7 @@ import { convertOtlpJson } from "../processor/otlp-json-converter";
 import { convertOtlpProto } from "../processor/otlp-proto-converter";
 import type { TraceProcessor } from "../processor/trace-processor";
 import { config } from "../config";
+import { extractBearerToken, validateApiKey } from "../api/auth";
 
 const EMPTY_RESPONSE = JSON.stringify({ partialSuccess: {} });
 
@@ -17,6 +18,16 @@ export function startHttpReceiver(processor: TraceProcessor) {
 
       if (url.pathname !== "/v1/traces") {
         return new Response("Not Found", { status: 404 });
+      }
+
+      // Auth: if any API keys exist in the DB, a valid Bearer token is required
+      const token  = extractBearerToken(req);
+      const authed = await validateApiKey(token ?? "");
+      if (!authed) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized — provide a valid API key as Bearer token" }),
+          { status: 401, headers: { "content-type": "application/json" } }
+        );
       }
 
       try {
