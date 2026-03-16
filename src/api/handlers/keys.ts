@@ -27,9 +27,15 @@ export async function handleListKeys(_req: Request): Promise<Response> {
 }
 
 export async function handleCreateKey(req: Request): Promise<Response> {
+  let body: unknown;
   try {
-    const body = await req.json();
-    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    body = await req.json();
+  } catch {
+    return invalidParams("Request body must be valid JSON");
+  }
+
+  try {
+    const name = typeof (body as any)?.name === "string" ? (body as any).name.trim() : "";
     if (!name) return invalidParams("name is required");
 
     const { key, hash, prefix } = generateApiKey();

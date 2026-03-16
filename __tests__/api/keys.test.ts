@@ -203,6 +203,16 @@ describe("handleCreateKey", () => {
     expect(res.status).toBe(400);
   });
 
+  test("returns 400 when body is missing", async () => {
+    const req = new Request("http://localhost:3000/api/keys", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      // no body
+    });
+    const res = await handleCreateKey(req);
+    expect(res.status).toBe(400);
+  });
+
   test("persists key to database", async () => {
     const req = new Request("http://localhost:3000/api/keys", {
       method: "POST",
