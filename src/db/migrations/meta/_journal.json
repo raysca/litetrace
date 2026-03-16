@@ -22,6 +22,13 @@
       "when": 1773040215137,
       "tag": "0002_workable_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1773661707985,
+      "tag": "0003_sloppy_doomsday",
+      "breakpoints": true
     }
   ]
 }

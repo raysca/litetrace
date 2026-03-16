@@ -54,3 +54,12 @@ export const metrics = sqliteTable("metrics", {
   attributes: text("attributes").notNull().default("{}"),
   timestamp: integer("timestamp").notNull(),
 });
+
+export const apiKeys = sqliteTable("api_keys", {
+  id:         text("id").primaryKey(),
+  name:       text("name").notNull(),
+  keyHash:    text("key_hash").notNull().unique(),
+  prefix:     text("prefix").notNull(),       // "lt_" + first 8 hex chars, for display
+  lastUsedAt: integer("last_used_at"),         // unix ms, nullable
+  createdAt:  integer("created_at").notNull(),
+});
