@@ -14,10 +14,14 @@ function formatDate(ms: number | null): string {
 
 function CopyField({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
-  function handleCopy() {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard write failed (e.g. non-HTTPS context) — no visual feedback
+    }
   }
   return (
     <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 font-mono text-sm">
@@ -30,7 +34,7 @@ function CopyField({ value }: { value: string }) {
 }
 
 export function ApiKeys() {
-  const { keys, loading, createKey, deleteKey } = useApiKeys();
+  const { keys, loading, error, createKey, deleteKey } = useApiKeys();
   const [newName, setNewName]             = useState("");
   const [creating, setCreating]           = useState(false);
   const [revealed, setRevealed]           = useState<NewKeyResult | null>(null);
@@ -55,8 +59,13 @@ export function ApiKeys() {
   }
 
   async function handleDelete(id: string) {
-    await deleteKey(id);
-    setDeleteConfirm(null);
+    try {
+      await deleteKey(id);
+      setDeleteConfirm(null);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Failed to revoke key");
+      setDeleteConfirm(null);
+    }
   }
 
   return (
@@ -68,6 +77,12 @@ export function ApiKeys() {
           When no keys exist, all traffic is allowed.
         </p>
       </div>
+
+      {error && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+          Failed to load keys: {error}
+        </div>
+      )}
 
       {/* Revealed key banner — shown once on creation */}
       {revealed && (

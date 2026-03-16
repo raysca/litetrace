@@ -48,7 +48,7 @@ export async function handleCreateKey(req: Request): Promise<Response> {
       .run();
 
     // Return full key — this is the only time it is ever visible
-    return Response.json({ id, name, prefix, createdAt, key }, { status: 201 });
+    return Response.json({ id, name, prefix, createdAt, lastUsedAt: null, key }, { status: 201 });
   } catch (err) {
     console.error("[API] createKey error:", err);
     return internalError();
