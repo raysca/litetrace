@@ -56,14 +56,14 @@ export function startGrpcReceiver(processor: TraceProcessor) {
 
       // Auth: gRPC clients send authorization as a lowercase header per HTTP/2 spec
       const token  = extractBearerToken(req);
-      const authed = await validateApiKey(token ?? "");
+      const authed = await validateApiKey(token);
       if (!authed) {
         return new Response(null, {
           status: 401,
           headers: {
             "content-type": "application/grpc",
             "grpc-status": "16",          // UNAUTHENTICATED
-            "grpc-message": "Unauthenticated — provide a valid API key as Bearer token",
+            "grpc-message": "Unauthenticated - provide a valid API key as Bearer token",
           },
         });
       }

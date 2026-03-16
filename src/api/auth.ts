@@ -43,7 +43,7 @@ export function extractBearerToken(req: Request): string | null {
  * Returns true if valid (and updates lastUsedAt).
  * Returns true unconditionally when no keys exist (auth disabled — zero-config default).
  */
-export async function validateApiKey(token: string): Promise<boolean> {
+export async function validateApiKey(token: string | null): Promise<boolean> {
   const db    = getDb();
   const count = db.select({ id: apiKeys.id }).from(apiKeys).all();
 

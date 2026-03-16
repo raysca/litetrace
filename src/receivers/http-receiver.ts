@@ -22,11 +22,17 @@ export function startHttpReceiver(processor: TraceProcessor) {
 
       // Auth: if any API keys exist in the DB, a valid Bearer token is required
       const token  = extractBearerToken(req);
-      const authed = await validateApiKey(token ?? "");
+      const authed = await validateApiKey(token);
       if (!authed) {
         return new Response(
-          JSON.stringify({ error: "Unauthorized — provide a valid API key as Bearer token" }),
-          { status: 401, headers: { "content-type": "application/json" } }
+          JSON.stringify({ error: "Unauthorized - provide a valid API key as Bearer token" }),
+          {
+            status: 401,
+            headers: {
+              "content-type": "application/json",
+              "www-authenticate": 'Bearer realm="LiteTrace"',
+            },
+          }
         );
       }
 
