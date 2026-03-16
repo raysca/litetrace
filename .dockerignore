@@ -1,0 +1,10 @@
+node_modules/
+.worktrees/
+__tests__/
+.git/
+*.db
+*.db-shm
+*.db-wal
+*.log
+.env*
+scripts/
