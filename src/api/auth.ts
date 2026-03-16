@@ -26,7 +26,7 @@ export function hashKey(key: string): string {
 
 /** Extract the Bearer token from an Authorization header, or null. */
 export function extractBearerToken(req: Request): string | null {
-  const header = req.headers.get("authorization") ?? req.headers.get("Authorization");
+  const header = req.headers.get("authorization");
   if (!header) return null;
   const spaceIdx = header.indexOf(" ");
   if (spaceIdx === -1) return null;
@@ -44,16 +44,20 @@ export function extractBearerToken(req: Request): string | null {
  * Returns true unconditionally when no keys exist (auth disabled — zero-config default).
  */
 export async function validateApiKey(token: string): Promise<boolean> {
-  const db  = getDb();
-  const all = db.select({ id: apiKeys.id, keyHash: apiKeys.keyHash })
-    .from(apiKeys)
-    .all();
+  const db    = getDb();
+  const count = db.select({ id: apiKeys.id }).from(apiKeys).all();
 
   // Zero keys → auth disabled, pass everything through
-  if (all.length === 0) return true;
+  if (count.length === 0) return true;
+
+  // Keys exist — empty token is always rejected
+  if (!token) return false;
 
   const hash  = hashKey(token);
-  const match = all.find(k => k.keyHash === hash);
+  const match = db.select({ id: apiKeys.id })
+    .from(apiKeys)
+    .where(eq(apiKeys.keyHash, hash))
+    .get();
   if (!match) return false;
 
   // Fire-and-forget: update lastUsedAt

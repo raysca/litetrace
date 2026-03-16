@@ -1,5 +1,7 @@
-import { test, expect, describe } from "bun:test";
-import { generateApiKey, hashKey, extractBearerToken } from "../../src/api/auth";
+import { test, expect, describe, beforeEach, mock } from "bun:test";
+import { createTestDb } from "../helpers/db";
+import { generateApiKey, hashKey, extractBearerToken, validateApiKey } from "../../src/api/auth";
+import { apiKeys } from "../../src/db/schema";
 
 describe("generateApiKey", () => {
   test("returns key with lt_ prefix", () => {
@@ -63,5 +65,66 @@ describe("extractBearerToken", () => {
       headers: { Authorization: "Basic abc123" },
     });
     expect(extractBearerToken(req)).toBeNull();
+  });
+});
+
+// validateApiKey integration-style tests using an in-memory SQLite DB.
+// We mock getDb() from src/db/client so validateApiKey uses our test DB
+// (which has the full schema from migrations via createTestDb()).
+describe("validateApiKey", () => {
+  let db: ReturnType<typeof createTestDb>;
+
+  beforeEach(() => {
+    db = createTestDb();
+    // Override the module-level getDb singleton for this test suite
+    mock.module("../../src/db/client", () => ({ getDb: () => db }));
+  });
+
+  test("returns true when no keys exist (auth disabled)", async () => {
+    // Empty DB → zero keys → auth disabled
+    const result = await validateApiKey("");
+    expect(result).toBe(true);
+  });
+
+  test("returns false for empty token when keys exist", async () => {
+    const { hash, prefix } = generateApiKey();
+    db.insert(apiKeys).values({
+      id: "test-id-1",
+      name: "test key",
+      keyHash: hash,
+      prefix,
+      createdAt: Date.now(),
+    }).run();
+
+    const result = await validateApiKey("");
+    expect(result).toBe(false);
+  });
+
+  test("returns true for a valid token when keys exist", async () => {
+    const { key, hash, prefix } = generateApiKey();
+    db.insert(apiKeys).values({
+      id: "test-id-2",
+      name: "test key",
+      keyHash: hash,
+      prefix,
+      createdAt: Date.now(),
+    }).run();
+
+    const result = await validateApiKey(key);
+    expect(result).toBe(true);
+  });
+
+  test("returns false for an invalid token when keys exist", async () => {
+    const { hash, prefix } = generateApiKey();
+    db.insert(apiKeys).values({
+      id: "test-id-3",
+      name: "test key",
+      keyHash: hash,
+      prefix,
+      createdAt: Date.now(),
+    }).run();
+
+    const result = await validateApiKey("lt_wrongtoken");
+    expect(result).toBe(false);
   });
 });
