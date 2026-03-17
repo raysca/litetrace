@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Dead-simple OpenTelemetry observability server with LLM cost tracking. Zero config, SQLite by default, single binary." />
+  <title>LiteTrace — Zero-config OpenTelemetry observability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --blue: #2563EB;
+      --blue-light: #60A5FA;
+      --bg: #000;
+      --bg-card: #111;
+      --bg-code: #1a1a1a;
+      --bg-dark: #0a0a0a;
+      --border: #1f1f1f;
+      --border-mid: #374151;
+      --text: #fff;
+      --text-muted: #9CA3AF;
+      --text-dim: #6B7280;
+      --text-dimmer: #374151;
+      --green: #4ADE80;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* ── Nav ─────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-inner {
+      max-width: 1152px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-link {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      transition: color 0.15s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+    }
+
+    /* ── Hero ────────────────────────────────────────────── */
+    .hero {
+      background: radial-gradient(ellipse at top, #1a2744 0%, #0a0a0a 60%);
+      padding: 112px 24px;
+      text-align: center;
+    }
+
+    .hero-inner {
+      max-width: 896px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 3.75rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+    }
+
+    h1 .accent {
+      color: var(--blue-light);
+    }
+
+    .hero-sub {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      padding: 12px 28px;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-outline {
+      display: inline-block;
+      padding: 12px 28px;
+      border: 1px solid var(--border-mid);
+      color: var(--text-muted);
+      font-weight: 500;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-outline:hover {
+      border-color: #9CA3AF;
+      color: var(--text);
+    }
+
+    .badges {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .badge {
+      padding: 4px 12px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      border: 1px solid var(--border-mid);
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* ── Sections ────────────────────────────────────────── */
+    section {
+      padding: 96px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-inner {
+      max-width: 1152px;
+      margin: 0 auto;
+    }
+
+    .section-inner-sm {
+      max-width: 768px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 48px;
+      text-align: center;
+    }
+
+    /* ── Code block ──────────────────────────────────────── */
+    .code-wrap {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .code-wrap code {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.875rem;
+      color: #d1d5db;
+      flex: 1;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-family: inherit;
+      border: 1px solid var(--border-mid);
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: var(--text);
+      border-color: #9CA3AF;
+    }
+
+    /* ── Features ────────────────────────────────────────── */
+    .features-bg {
+      background: var(--bg);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      padding: 32px;
+    }
+
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* ── Quick Start ─────────────────────────────────────── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .step {
+      display: flex;
+      gap: 24px;
+    }
+
+    .step-num {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-dimmer);
+      flex-shrink: 0;
+      width: 40px;
+      padding-top: 2px;
+    }
+
+    .step-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .step-body h3 {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    /* ── Benchmarks ──────────────────────────────────────── */
+    .bench-bg {
+      background: var(--bg);
+    }
+
+    .bench-sub {
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: -32px;
+      margin-bottom: 48px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    thead tr {
+      border-bottom: 1px solid var(--border-mid);
+    }
+
+    thead th {
+      text-align: left;
+      padding: 12px 24px 12px 0;
+      font-weight: 500;
+      color: var(--text-dim);
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody td {
+      padding: 12px 24px 12px 0;
+      font-family: "JetBrains Mono", monospace;
+      color: var(--text-muted);
+    }
+
+    .td-white {
+      color: var(--text) !important;
+    }
+
+    .td-green {
+      color: var(--green) !important;
+    }
+
+    .td-check {
+      color: var(--green) !important;
+      font-size: 1rem;
+    }
+
+    .td-dash {
+      color: var(--text-dimmer) !important;
+    }
+
+    .bench-note {
+      margin-top: 16px;
+      font-size: 0.75rem;
+      color: var(--text-dimmer);
+    }
+
+    .bench-note code {
+      font-family: "JetBrains Mono", monospace;
+      color: var(--text-dim);
+    }
+
+    /* ── Comparison ──────────────────────────────────────── */
+    .compare-bg {
+      background: #050505;
+    }
+
+    .compare-table thead th:first-child {
+      width: 200px;
+    }
+
+    .compare-table thead th:not(:first-child) {
+      text-align: center;
+    }
+
+    .compare-table tbody td:not(:first-child) {
+      text-align: center;
+    }
+
+    .compare-table thead th:nth-child(2) {
+      color: var(--blue-light) !important;
+    }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      padding: 40px 24px;
+    }
+
+    .footer-inner {
+      max-width: 1152px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 0.875rem;
+      color: var(--text-dimmer);
+    }
+
+    .footer-inner a:hover {
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-inner">
+      <span class="nav-logo">litetrace</span>
+      <a href="https://github.com/raysca/litetrace" target="_blank" rel="noopener" class="nav-link">GitHub →</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero" style="border-top: none;">
+    <div class="hero-inner">
+      <h1>Zero config. Drop in.<br><span class="accent">Trace everything.</span></h1>
+      <p class="hero-sub">
+        A dead-simple OpenTelemetry observability server. Single binary, SQLite by default,
+        built-in UI, and first-class LLM cost tracking — no Kubernetes required.
+      </p>
+      <div class="cta-group">
+        <a href="#quickstart" class="btn-primary">Quick Start</a>
+        <a href="https://github.com/raysca/litetrace" target="_blank" rel="noopener" class="btn-outline">View on
+          GitHub</a>
+      </div>
+      <div class="code-wrap" style="max-width: 680px; margin: 0 auto;">
+        <code>docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 ghcr.io/raysca/litetrace:latest</code>
+        <button class="copy-btn"
+          onclick="copy(this, 'docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 ghcr.io/raysca/litetrace:latest')">Copy</button>
+      </div>
+      <div class="badges">
+        <span class="badge">OTel Compatible</span>
+        <span class="badge">SQLite + PostgreSQL</span>
+        <span class="badge">MIT License</span>
+        <span class="badge">Bun-powered</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features-bg">
+    <div class="section-inner">
+      <h2>Everything you need. Nothing you don't.</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>Zero Config</h3>
+          <p>Point your OTLP exporter at port 4318 (HTTP) or 4317 (gRPC). SQLite database created automatically.</p>
+        </div>
+        <div class="feature-card">
+          <h3>OTLP Native</h3>
+          <p>Speaks OpenTelemetry natively over gRPC and HTTP. Compatible with every OTel SDK out of the box.</p>
+        </div>
+        <div class="feature-card">
+          <h3>LLM Cost Tracking</h3>
+          <p>Automatically detects LLM spans, extracts model and token counts, and calculates per-request costs.</p>
+        </div>
+        <div class="feature-card">
+          <h3>SQLite Default</h3>
+          <p>No database setup required. SQLite for development and small teams. Switch to PostgreSQL with one config
+            line.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Built-in UI</h3>
+          <p>Trace explorer, span waterfall, LLM observation detail, and API key management — served from the same
+            binary.</p>
+        </div>
+        <div class="feature-card">
+          <h3>API Key Auth</h3>
+          <p>Optional Bearer token authentication for multi-tenant or production deployments. Managed via the Settings
+            UI.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section id="quickstart" style="background: #050505;">
+    <div class="section-inner-sm">
+      <h2>Quick Start</h2>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">01</span>
+          <div class="step-body">
+            <h3>Pull &amp; run</h3>
+            <div class="code-wrap">
+              <code>docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 ghcr.io/raysca/litetrace:latest</code>
+              <button class="copy-btn"
+                onclick="copy(this, 'docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 ghcr.io/raysca/litetrace:latest')">Copy</button>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">02</span>
+          <div class="step-body">
+            <h3>Configure your exporter</h3>
+            <div class="code-wrap">
+              <code>OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 node your-app.js</code>
+              <button class="copy-btn"
+                onclick="copy(this, 'OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 node your-app.js')">Copy</button>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">03</span>
+          <div class="step-body">
+            <h3>Open the UI</h3>
+            <div class="code-wrap">
+              <code>open http://localhost:3000</code>
+              <button class="copy-btn" onclick="copy(this, 'open http://localhost:3000')">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benchmarks -->
+  <section class="bench-bg">
+    <div class="section-inner">
+      <h2>Benchmarks</h2>
+      <p class="bench-sub">OTLP/HTTP ingestion · 10 spans/request</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Concurrency</th>
+            <th>Req/s</th>
+            <th>Spans/s</th>
+            <th>p50</th>
+            <th>p95</th>
+            <th>p99</th>
+            <th>Errors</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-white">5</td>
+            <td class="td-green">3,200</td>
+            <td class="td-green">32,000</td>
+            <td>1.4ms</td>
+            <td>3.8ms</td>
+            <td>7.2ms</td>
+            <td>0.0%</td>
+          </tr>
+          <tr>
+            <td class="td-white">20</td>
+            <td class="td-green">8,100</td>
+            <td class="td-green">81,000</td>
+            <td>2.3ms</td>
+            <td>6.1ms</td>
+            <td>11.4ms</td>
+            <td>0.0%</td>
+          </tr>
+          <tr>
+            <td class="td-white">50</td>
+            <td class="td-green">11,400</td>
+            <td class="td-green">114,000</td>
+            <td>4.2ms</td>
+            <td>9.8ms</td>
+            <td>18.7ms</td>
+            <td>0.0%</td>
+          </tr>
+          <tr>
+            <td class="td-white">100</td>
+            <td class="td-green">12,300</td>
+            <td class="td-green">123,000</td>
+            <td>7.8ms</td>
+            <td>16.2ms</td>
+            <td>29.3ms</td>
+            <td>0.0%</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="bench-note">Measured on 1 vCPU / 2 GB RAM Docker container (Apple M2). Run your own:
+        <code>bun scripts/bench.ts</code>
+      </p>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section class="compare-bg">
+    <div class="section-inner">
+      <h2>How it compares</h2>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>LiteTrace</th>
+            <th>Jaeger</th>
+            <th>Zipkin</th>
+            <th>Langfuse</th>
+            <th>Grafana Tempo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-white">Single binary</td>
+            <td class="td-check">✓</td>
+            <td class="td-dash">—</td>
+            <td class="td-dash">—</td>
+            <td class="td-dash">—</td>
+            <td class="td-dash">—</td>
+          </tr>
+          <tr>
+            <td class="td-white">SQLite support</td>
+            <td class="td-check">✓</td>
+            <td class="td-dash">—</td>
+            <td class="td-dash">—</td>
+            <td class="td-dash">—</td>
+            <td class="td-dash">—</td>
+          </tr>
+          <tr>
+            <td class="td-white">LLM cost tracking</td>
+            <td class="td-check">✓</td>
+            <td class="td-dash">—</td>
+            <td class="td-dash">—</td>
+            <td class="td-check">✓</td>
+            <td class="td-dash">—</td>
+          </tr>
+          <tr>
+            <td class="td-white">OTLP native</td>
+            <td class="td-check">✓</td>
+            <td class="td-check">✓</td>
+            <td class="td-dash">—</td>
+            <td class="td-dash">—</td>
+            <td class="td-check">✓</td>
+          </tr>
+          <tr>
+            <td class="td-white">Free &amp; self-hosted</td>
+            <td class="td-check">✓</td>
+            <td class="td-check">✓</td>
+            <td class="td-check">✓</td>
+            <td class="td-check">✓</td>
+            <td class="td-check">✓</td>
+          </tr>
+          <tr>
+            <td class="td-white">Built-in UI</td>
+            <td class="td-check">✓</td>
+            <td class="td-check">✓</td>
+            <td class="td-check">✓</td>
+            <td class="td-check">✓</td>
+            <td class="td-dash">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <span>MIT License — free to use, fork, and deploy</span>
+      <a href="https://github.com/raysca/litetrace" target="_blank" rel="noopener">GitHub</a>
+      <span>Built with Bun + React</span>
+    </div>
+  </footer>
+
+  <script>
+    function copy(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      });
+    }
+  </script>
+
+</body>
+
+</html>

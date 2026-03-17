@@ -1,13 +1,27 @@
 {
-  "name": "bun-react-template",
+  "name": "@raysca/litetrace",
   "version": "0.1.0",
-  "private": true,
+  "description": "Dead-simple OpenTelemetry observability server with LLM cost tracking",
+  "keywords": [
+    "opentelemetry",
+    "otlp",
+    "observability",
+    "tracing",
+    "llm",
+    "bun"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/raysca/litetrace"
+  },
   "type": "module",
   "scripts": {
     "dev": "bun --hot src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts",
     "build": "bun run build.ts",
-    "seed": "curl -X POST http://localhost:3000/api/debug/seed"
+    "seed": "curl -X POST http://localhost:3000/api/debug/seed",
+    "test": "bun test"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
