@@ -25,7 +25,7 @@ describe("handleListTraces", () => {
     const response = await handleListTraces(req);
     expect(response.status).toBe(400);
     const json = await response.json();
-    expect(json.error).toContain("latencyMin must be a number");
+    expect(json.error.message).toContain("latencyMin must be a number");
   });
 
   test("validates invalid latencyMax parameter", async () => {
@@ -33,7 +33,7 @@ describe("handleListTraces", () => {
     const response = await handleListTraces(req);
     expect(response.status).toBe(400);
     const json = await response.json();
-    expect(json.error).toContain("latencyMax must be a number");
+    expect(json.error.message).toContain("latencyMax must be a number");
   });
 
   test("validates invalid costMin parameter", async () => {
@@ -41,7 +41,7 @@ describe("handleListTraces", () => {
     const response = await handleListTraces(req);
     expect(response.status).toBe(400);
     const json = await response.json();
-    expect(json.error).toContain("costMin must be a number");
+    expect(json.error.message).toContain("costMin must be a number");
   });
 
   test("validates invalid costMax parameter", async () => {
@@ -49,7 +49,7 @@ describe("handleListTraces", () => {
     const response = await handleListTraces(req);
     expect(response.status).toBe(400);
     const json = await response.json();
-    expect(json.error).toContain("costMax must be a number");
+    expect(json.error.message).toContain("costMax must be a number");
   });
 
   test("accepts all new filter parameters together", async () => {

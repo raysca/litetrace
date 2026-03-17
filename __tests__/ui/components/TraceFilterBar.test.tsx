@@ -3,7 +3,6 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { TraceFilterBar } from "../../../src/ui/components/filters/TraceFilterBar";
 
-// Mock fetch to prevent happy-dom from making real requests
 global.fetch = mock(() =>
   Promise.resolve({
     json: () => Promise.resolve(["api-gateway", "user-service"]),
@@ -11,143 +10,89 @@ global.fetch = mock(() =>
 ) as any;
 
 describe("TraceFilterBar", () => {
-  test("renders all filter sections", () => {
-    const mockOnFilter = () => {};
-    const mockOnRefresh = () => {};
-
-    render(<TraceFilterBar onFilter={mockOnFilter} onRefresh={mockOnRefresh} />);
-
-    // Check for buttons
-    expect(screen.getByText("Clear All")).toBeDefined();
-    expect(screen.getByText("↻ Refresh")).toBeDefined();
+  test("renders core filter UI elements", () => {
+    render(<TraceFilterBar onFilter={() => {}} onRefresh={() => {}} />);
+    expect(screen.getByText("Filters")).toBeDefined();
+    expect(screen.getByText("Apply")).toBeDefined();
+    expect(screen.getByTitle("Clear filters")).toBeDefined();
   });
 
-  test("calls onFilter with service when service input changes", async () => {
-    const filters: any[] = [];
-    const mockOnFilter = (f: any) => filters.push(f);
-    const mockOnRefresh = () => {};
+  test("calls onFilter when Apply button is clicked", () => {
+    const calls: any[] = [];
+    render(<TraceFilterBar onFilter={f => calls.push(f)} onRefresh={() => {}} />);
 
-    render(<TraceFilterBar onFilter={mockOnFilter} onRefresh={mockOnRefresh} />);
+    fireEvent.click(screen.getByText("Apply"));
 
-    // Find service select
-    const serviceInput = await screen.findByDisplayValue("All services") as HTMLSelectElement;
-    expect(serviceInput).toBeDefined();
+    expect(calls.length).toBe(1);
+  });
 
-    fireEvent.change(serviceInput, { target: { value: "user-service" } });
+  test("calls onFilter with status when status select changes", () => {
+    const calls: any[] = [];
+    render(<TraceFilterBar onFilter={f => calls.push(f)} onRefresh={() => {}} />);
+
+    // Status is the second <select> (after service)
+    const selects = screen.getAllByRole("combobox");
+    fireEvent.change(selects[1]!, { target: { value: "error" } });
+    fireEvent.click(screen.getByText("Apply"));
+
+    const last = calls[calls.length - 1];
+    expect(last.status).toBe("error");
+  });
+
+  test("calls onFilter({}) when Clear button is clicked", () => {
+    const calls: any[] = [];
+    render(<TraceFilterBar onFilter={f => calls.push(f)} onRefresh={() => {}} />);
+
+    // Set a filter, then clear
+    const selects = screen.getAllByRole("combobox");
+    fireEvent.change(selects[1]!, { target: { value: "error" } });
+    fireEvent.click(screen.getByTitle("Clear filters"));
+
+    const last = calls[calls.length - 1];
+    expect(last).toEqual({});
+  });
+
+  test("calls onFilter with spanName when Enter is pressed in span input", () => {
+    const calls: any[] = [];
+    render(<TraceFilterBar onFilter={f => calls.push(f)} onRefresh={() => {}} />);
+
+    const spanInput = screen.getByPlaceholderText("All");
+    fireEvent.change(spanInput, { target: { value: "my-span" } });
+    fireEvent.keyDown(spanInput, { key: "Enter" });
+
+    const last = calls[calls.length - 1];
+    expect(last.spanName).toBe("my-span");
+  });
+
+  test("applies latency preset when preset button is clicked", () => {
+    const calls: any[] = [];
+    render(<TraceFilterBar onFilter={f => calls.push(f)} onRefresh={() => {}} />);
+
+    fireEvent.click(screen.getByText("< 100ms"));
+    fireEvent.click(screen.getByText("Apply"));
+
+    const last = calls[calls.length - 1];
+    expect(last.latencyMaxMs).toBe(100);
+    expect(last.latencyMinMs).toBeUndefined();
+  });
+
+  test("applies cost preset when preset button is clicked", () => {
+    const calls: any[] = [];
+    render(<TraceFilterBar onFilter={f => calls.push(f)} onRefresh={() => {}} />);
+
+    fireEvent.click(screen.getByText("> $0.10"));
+    fireEvent.click(screen.getByText("Apply"));
+
+    const last = calls[calls.length - 1];
+    expect(last.costMinUsd).toBe(0.10);
+    expect(last.costMaxUsd).toBeUndefined();
+  });
+
+  test("loads service options from /api/services", async () => {
+    render(<TraceFilterBar onFilter={() => {}} onRefresh={() => {}} />);
 
     await waitFor(() => {
-      expect(filters.length > 0).toBe(true);
-      const lastFilter = filters[filters.length - 1];
-      expect(lastFilter.service).toBe("user-service");
+      expect(screen.getByText("api-gateway")).toBeDefined();
     });
-  });
-
-  test("calls onFilter with status when status dropdown changes", async () => {
-    const filters: any[] = [];
-    const mockOnFilter = (f: any) => filters.push(f);
-    const mockOnRefresh = () => {};
-
-    render(<TraceFilterBar onFilter={mockOnFilter} onRefresh={mockOnRefresh} />);
-
-    const statusSelect = screen.getByDisplayValue("All") as HTMLSelectElement;
-    expect(statusSelect).toBeDefined();
-
-    fireEvent.change(statusSelect, { target: { value: "error" } });
-
-    await waitFor(() => {
-      expect(filters.length > 0).toBe(true);
-      const lastFilter = filters[filters.length - 1];
-      expect(lastFilter.status).toBe("error");
-    });
-  });
-
-  test("clears all filters when Clear All button is clicked", async () => {
-    const filters: any[] = [];
-    const mockOnFilter = (f: any) => filters.push(f);
-    const mockOnRefresh = () => {};
-
-    render(<TraceFilterBar onFilter={mockOnFilter} onRefresh={mockOnRefresh} />);
-
-    // Set some filters
-    const serviceInput = await screen.findByDisplayValue("All services") as HTMLSelectElement;
-    fireEvent.change(serviceInput, { target: { value: "user-service" } });
-
-    await waitFor(() => {
-      expect(filters.length > 0).toBe(true);
-    });
-
-    // Click Clear All
-    const clearButton = screen.getByText("Clear All");
-    fireEvent.click(clearButton);
-
-    await waitFor(() => {
-      const lastFilter = filters[filters.length - 1];
-      expect(lastFilter).toEqual({});
-    });
-  });
-
-  test("calls onRefresh when Refresh button is clicked", () => {
-    let refreshCalled = false;
-    const mockOnFilter = () => {};
-    const mockOnRefresh = () => {
-      refreshCalled = true;
-    };
-
-    render(<TraceFilterBar onFilter={mockOnFilter} onRefresh={mockOnRefresh} />);
-
-    const refreshButton = screen.getByText("↻ Refresh");
-    fireEvent.click(refreshButton);
-
-    expect(refreshCalled).toBe(true);
-  });
-
-  test("shows Apply button when advanced filters are set", async () => {
-    const mockOnFilter = () => {};
-    const mockOnRefresh = () => {};
-
-    const { rerender } = render(
-      <TraceFilterBar onFilter={mockOnFilter} onRefresh={mockOnRefresh} />
-    );
-
-    // Apply button should not be visible initially
-    let applyButton = screen.queryByText("Apply Filters");
-    expect(applyButton).toBeNull();
-
-    // Set a span name to trigger advanced filter
-    const spanNameInput = screen.getByPlaceholderText("All spans") as HTMLInputElement;
-    fireEvent.change(spanNameInput, { target: { value: "my-span" } });
-
-    await waitFor(() => {
-      applyButton = screen.queryByText("Apply Filters");
-      expect(applyButton).toBeDefined();
-    });
-  });
-
-  test("applies advanced filters when Apply button is clicked", async () => {
-    const filters: any[] = [];
-    const mockOnFilter = (f: any) => filters.push(f);
-    const mockOnRefresh = () => {};
-
-    render(<TraceFilterBar onFilter={mockOnFilter} onRefresh={mockOnRefresh} />);
-
-    // Set latency filter
-    const latencyInputs = screen.getAllByDisplayValue("");
-    const latencyMinInput = latencyInputs.find((el) => (el as HTMLInputElement).placeholder?.includes("Min")) as HTMLInputElement;
-
-    if (latencyMinInput) {
-      fireEvent.change(latencyMinInput, { target: { value: "100" } });
-
-      await waitFor(() => {
-        // Click Apply button
-        const applyButton = screen.queryByText("Apply Filters");
-        if (applyButton) {
-          fireEvent.click(applyButton);
-
-          // The last filter should include latency
-          const lastFilter = filters[filters.length - 1];
-          expect(lastFilter.latencyMinMs).toBeDefined();
-        }
-      });
-    }
   });
 });
