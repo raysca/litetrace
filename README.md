@@ -46,9 +46,9 @@ Create `config.yaml` (or mount it at `/app/config.yaml` in Docker):
 | `server.port` | `3000` | Web UI + API port |
 | `otlp.grpcPort` | `4317` | OTLP/gRPC port |
 | `otlp.httpPort` | `4318` | OTLP/HTTP port |
-| `storage.driver` | `sqlite` | `sqlite` or `postgres` |
+<!-- | `storage.driver` | `sqlite` | `sqlite` or `postgres` | -->
 | `storage.path` | `litetrace.db` | SQLite file path |
-| `storage.dsn` | — | PostgreSQL DSN (if driver=postgres) |
+<!-- | `storage.dsn` | — | PostgreSQL DSN (if driver=postgres) | -->
 | `auth.enabled` | `false` | Enable API key authentication |
 
 ## API Key Setup
