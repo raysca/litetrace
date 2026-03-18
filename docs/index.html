@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="Dead-simple OpenTelemetry observability server with LLM cost tracking. Zero config, SQLite by default, single binary." />
-  <title>LiteTrace — Zero-config OpenTelemetry observability</title>
+    content="The simplest way to get cost tracking and observability into your LLM app. One docker run, no config, no cloud account." />
+  <title>LiteTrace — Dead simple LLM observability</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -37,9 +37,7 @@
       --green: #4ADE80;
     }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: "Inter", system-ui, -apple-system, sans-serif;
@@ -48,10 +46,7 @@
       line-height: 1.6;
     }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
+    a { color: inherit; text-decoration: none; }
 
     /* ── Nav ─────────────────────────────────────────────── */
     nav {
@@ -86,9 +81,7 @@
       transition: color 0.15s;
     }
 
-    .nav-link:hover {
-      color: var(--text);
-    }
+    .nav-link:hover { color: var(--text); }
 
     /* ── Hero ────────────────────────────────────────────── */
     .hero {
@@ -110,9 +103,7 @@
       margin-bottom: 24px;
     }
 
-    h1 .accent {
-      color: var(--blue-light);
-    }
+    h1 .accent { color: var(--blue-light); }
 
     .hero-sub {
       font-size: 1.25rem;
@@ -138,9 +129,7 @@
       transition: background 0.15s;
     }
 
-    .btn-primary:hover {
-      background: #1d4ed8;
-    }
+    .btn-primary:hover { background: #1d4ed8; }
 
     .btn-outline {
       display: inline-block;
@@ -151,10 +140,7 @@
       transition: border-color 0.15s, color 0.15s;
     }
 
-    .btn-outline:hover {
-      border-color: #9CA3AF;
-      color: var(--text);
-    }
+    .btn-outline:hover { border-color: #9CA3AF; color: var(--text); }
 
     .badges {
       display: flex;
@@ -228,16 +214,9 @@
       transition: color 0.15s, border-color 0.15s;
     }
 
-    .copy-btn:hover {
-      color: var(--text);
-      border-color: #9CA3AF;
-    }
+    .copy-btn:hover { color: var(--text); border-color: #9CA3AF; }
 
     /* ── Features ────────────────────────────────────────── */
-    .features-bg {
-      background: var(--bg);
-    }
-
     .features-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -264,16 +243,9 @@
     }
 
     /* ── Quick Start ─────────────────────────────────────── */
-    .steps {
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-    }
+    .steps { display: flex; flex-direction: column; gap: 32px; }
 
-    .step {
-      display: flex;
-      gap: 24px;
-    }
+    .step { display: flex; gap: 24px; }
 
     .step-num {
       font-family: "JetBrains Mono", monospace;
@@ -285,10 +257,7 @@
       padding-top: 2px;
     }
 
-    .step-body {
-      flex: 1;
-      min-width: 0;
-    }
+    .step-body { flex: 1; min-width: 0; }
 
     .step-body h3 {
       font-size: 1rem;
@@ -297,10 +266,6 @@
     }
 
     /* ── Benchmarks ──────────────────────────────────────── */
-    .bench-bg {
-      background: var(--bg);
-    }
-
     .bench-sub {
       text-align: center;
       color: var(--text-muted);
@@ -308,15 +273,9 @@
       margin-bottom: 48px;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 
-    thead tr {
-      border-bottom: 1px solid var(--border-mid);
-    }
+    thead tr { border-bottom: 1px solid var(--border-mid); }
 
     thead th {
       text-align: left;
@@ -326,9 +285,7 @@
       font-family: "JetBrains Mono", monospace;
     }
 
-    tbody tr {
-      border-bottom: 1px solid var(--border);
-    }
+    tbody tr { border-bottom: 1px solid var(--border); }
 
     tbody td {
       padding: 12px 24px 12px 0;
@@ -336,22 +293,8 @@
       color: var(--text-muted);
     }
 
-    .td-white {
-      color: var(--text) !important;
-    }
-
-    .td-green {
-      color: var(--green) !important;
-    }
-
-    .td-check {
-      color: var(--green) !important;
-      font-size: 1rem;
-    }
-
-    .td-dash {
-      color: var(--text-dimmer) !important;
-    }
+    .td-white { color: var(--text) !important; }
+    .td-green { color: var(--green) !important; }
 
     .bench-note {
       margin-top: 16px;
@@ -364,25 +307,368 @@
       color: var(--text-dim);
     }
 
-    /* ── Comparison ──────────────────────────────────────── */
-    .compare-bg {
-      background: #050505;
+    /* ── Screenshots Carousel ────────────────────────────── */
+    .screenshots-bg { background: #050505; }
+
+    .carousel-wrap {
+      position: relative;
+      user-select: none;
     }
 
-    .compare-table thead th:first-child {
-      width: 200px;
+    .carousel-main {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border-mid);
+      background: #0a0a0a;
+      aspect-ratio: 16 / 9;
     }
 
-    .compare-table thead th:not(:first-child) {
+    .carousel-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .carousel-slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top left;
+      display: block;
+    }
+
+    /* Arrow buttons */
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 40px;
+      height: 40px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid var(--border-mid);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      font-size: 1rem;
+    }
+
+    .carousel-arrow:hover {
+      background: rgba(37,99,235,0.2);
+      border-color: var(--blue);
+      color: var(--text);
+    }
+
+    .carousel-prev { left: 12px; }
+    .carousel-rear { right: 12px; }
+
+    /* Caption overlay */
+    .carousel-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 24px 20px 16px;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .carousel-caption h3 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .carousel-caption p {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Thumbnail tabs */
+    .carousel-tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .carousel-tab {
+      position: relative;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      background: #0a0a0a;
+      transition: border-color 0.2s;
+      opacity: 0.45;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+
+    .carousel-tab:hover { opacity: 0.7; border-color: var(--border-mid); }
+
+    .carousel-tab.active {
+      opacity: 1;
+      border-color: var(--blue);
+    }
+
+    .carousel-tab img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top left;
+      display: block;
+    }
+
+    .carousel-tab-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 4px 6px;
+      background: rgba(0,0,0,0.75);
+      font-size: 0.65rem;
+      font-family: "JetBrains Mono", monospace;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .carousel-tab.active .carousel-tab-label { color: var(--blue-light); }
+
+    /* Progress dots for mobile */
+    .carousel-dots {
+      display: none;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .carousel-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border-mid);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .carousel-dot.active {
+      background: var(--blue);
+      transform: scale(1.3);
+    }
+
+    @media (max-width: 640px) {
+      .carousel-tabs { display: none; }
+      .carousel-dots { display: flex; }
+      .carousel-arrow { width: 32px; height: 32px; font-size: 0.875rem; }
+      .carousel-caption h3 { font-size: 0.875rem; }
+      .carousel-caption p { display: none; }
+    }
+
+    /* ── Complexity / Why LiteTrace ──────────────────────── */
+    .why-bg { background: #050505; }
+
+    .why-intro {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 600px;
+      margin: -32px auto 56px;
+      line-height: 1.7;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 56px;
+    }
+
+    .complexity-card {
+      background: #0a0a0a;
+      padding: 28px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .complexity-card.featured {
+      background: #0c1428;
+    }
+
+    .complexity-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .complexity-name {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .complexity-card.featured .complexity-name {
+      color: var(--blue-light);
+    }
+
+    .complexity-badge {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.6875rem;
+      padding: 2px 8px;
+      border: 1px solid;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge-green {
+      border-color: rgba(74, 222, 128, 0.4);
+      color: var(--green);
+      background: rgba(74, 222, 128, 0.05);
+    }
+
+    .badge-gray {
+      border-color: var(--border-mid);
+      color: var(--text-dim);
+      background: transparent;
+    }
+
+    /* Step blocks visual */
+    .complexity-steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .step-block {
+      height: 8px;
+      flex: 1;
+      min-width: 10px;
+      max-width: 32px;
+      border-radius: 1px;
+    }
+
+    .step-block.filled-blue { background: var(--blue); }
+    .step-block.filled-red  { background: #ef4444; }
+    .step-block.filled-orange { background: #f97316; }
+    .step-block.filled-amber { background: #f59e0b; }
+    .step-block.filled-violet { background: #8b5cf6; }
+    .step-block.empty { background: var(--border-mid); opacity: 0.3; }
+
+    .complexity-count {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .complexity-count strong {
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: block;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .complexity-card.featured .complexity-count strong {
+      color: var(--blue-light);
+    }
+
+    /* Step details list */
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.78125rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .step-item-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .featured .step-item-dot { background: var(--blue); }
+    .step-item-dot.red   { background: #ef4444; }
+    .step-item-dot.orange { background: #f97316; }
+    .step-item-dot.amber  { background: #f59e0b; }
+    .step-item-dot.violet { background: #8b5cf6; }
+
+    .no-llm-note {
+      font-size: 0.6875rem;
+      font-family: "JetBrains Mono", monospace;
+      color: var(--text-dimmer);
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Callout stat row */
+    .why-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .why-stat {
+      background: #0a0a0a;
+      padding: 28px 24px;
       text-align: center;
     }
 
-    .compare-table tbody td:not(:first-child) {
-      text-align: center;
+    .why-stat-value {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--blue-light);
+      display: block;
+      line-height: 1.1;
+      margin-bottom: 8px;
     }
 
-    .compare-table thead th:nth-child(2) {
-      color: var(--blue-light) !important;
+    .why-stat-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 640px) {
+      .why-stats { grid-template-columns: 1fr; }
+      .complexity-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .why-stats { grid-template-columns: repeat(3, 1fr); }
     }
 
     /* ── Footer ──────────────────────────────────────────── */
@@ -404,9 +690,7 @@
       color: var(--text-dimmer);
     }
 
-    .footer-inner a:hover {
-      color: var(--text-muted);
-    }
+    .footer-inner a:hover { color: var(--text-muted); }
   </style>
 </head>
 
@@ -423,15 +707,14 @@
   <!-- Hero -->
   <section class="hero" style="border-top: none;">
     <div class="hero-inner">
-      <h1>Zero config. Drop in.<br><span class="accent">Trace everything.</span></h1>
+      <h1>LLM observability.<br><span class="accent">Without the overhead.</span></h1>
       <p class="hero-sub">
-        A dead-simple OpenTelemetry observability server. Single binary, SQLite by default,
-        built-in UI, and first-class LLM cost tracking — no Kubernetes required.
+        One command to track every LLM call — tokens, cost, latency, and full prompt/completion history.
+        SQLite by default, zero config, no cloud account required.
       </p>
       <div class="cta-group">
         <a href="#quickstart" class="btn-primary">Quick Start</a>
-        <a href="https://github.com/raysca/litetrace" target="_blank" rel="noopener" class="btn-outline">View on
-          GitHub</a>
+        <a href="https://github.com/raysca/litetrace" target="_blank" rel="noopener" class="btn-outline">View on GitHub</a>
       </div>
       <div class="code-wrap" style="max-width: 680px; margin: 0 auto;">
         <code>docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 ghcr.io/raysca/litetrace:latest</code>
@@ -441,45 +724,322 @@
       <div class="badges">
         <span class="badge">OTel Compatible</span>
         <span class="badge">SQLite + PostgreSQL</span>
+        <span class="badge">GPT-4o · Claude · Gemini</span>
         <span class="badge">MIT License</span>
-        <span class="badge">Bun-powered</span>
       </div>
     </div>
   </section>
 
   <!-- Features -->
-  <section class="features-bg">
+  <section>
     <div class="section-inner">
-      <h2>Everything you need. Nothing you don't.</h2>
+      <h2>Built for LLM apps. Simple by design.</h2>
       <div class="features-grid">
         <div class="feature-card">
+          <h3>LLM Cost Tracking</h3>
+          <p>Auto-detects LLM spans and calculates exact cost per request across GPT-4o, Claude, Gemini, and any model using OpenTelemetry gen_ai conventions.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Prompt &amp; Completion Viewer</h3>
+          <p>Inspect every system prompt, user message, and model response inline — no log digging required. Color-coded by role.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Span Tree &amp; Timeline</h3>
+          <p>Full span hierarchy with waterfall timing. See exactly where your agent pipeline is spending time and tokens.</p>
+        </div>
+        <div class="feature-card">
           <h3>Zero Config</h3>
-          <p>Point your OTLP exporter at port 4318 (HTTP) or 4317 (gRPC). SQLite database created automatically.</p>
+          <p>Point your OTLP exporter at port 4318 (HTTP) or 4317 (gRPC). SQLite database created automatically on first run.</p>
         </div>
         <div class="feature-card">
           <h3>OTLP Native</h3>
-          <p>Speaks OpenTelemetry natively over gRPC and HTTP. Compatible with every OTel SDK out of the box.</p>
+          <p>Compatible with every OpenTelemetry SDK. One environment variable and your existing instrumentation just works.</p>
         </div>
         <div class="feature-card">
-          <h3>LLM Cost Tracking</h3>
-          <p>Automatically detects LLM spans, extracts model and token counts, and calculates per-request costs.</p>
-        </div>
-        <div class="feature-card">
-          <h3>SQLite Default</h3>
-          <p>No database setup required. SQLite for development and small teams. Switch to PostgreSQL with one config
-            line.</p>
-        </div>
-        <div class="feature-card">
-          <h3>Built-in UI</h3>
-          <p>Trace explorer, span waterfall, LLM observation detail, and API key management — served from the same
-            binary.</p>
-        </div>
-        <div class="feature-card">
-          <h3>API Key Auth</h3>
-          <p>Optional Bearer token authentication for multi-tenant or production deployments. Managed via the Settings
-            UI.</p>
+          <h3>Single Binary</h3>
+          <p>One <code style="font-family: 'JetBrains Mono', monospace; font-size: 0.8em; color: #9CA3AF">docker run</code>. No external databases, no sidecars, no configuration files required.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Screenshots Carousel -->
+  <section class="screenshots-bg">
+    <div class="section-inner">
+      <h2>See it in action</h2>
+      <div class="carousel-wrap" id="carousel">
+
+        <!-- Main display -->
+        <div class="carousel-main" id="carouselMain">
+
+          <div class="carousel-slide active" data-index="0">
+            <img src="screenshots/dashboard.png" alt="LiteTrace dashboard" loading="eager" />
+            <div class="carousel-caption">
+              <h3>Cost dashboard at a glance</h3>
+              <p>Total requests, tokens, cost, and latency over any time range — broken down by model.</p>
+            </div>
+          </div>
+
+          <div class="carousel-slide" data-index="1">
+            <img src="screenshots/traces.png" alt="Trace list with filters" loading="lazy" />
+            <div class="carousel-caption">
+              <h3>Filter traces by what matters</h3>
+              <p>Find expensive calls, slow responses, or errors instantly with real-time filters.</p>
+            </div>
+          </div>
+
+          <div class="carousel-slide" data-index="2">
+            <img src="screenshots/trace-detail.png" alt="Trace detail with span tree" loading="lazy" />
+            <div class="carousel-caption">
+              <h3>Full trace detail with span tree</h3>
+              <p>Complete span hierarchy with token counts and costs visible at every LLM call.</p>
+            </div>
+          </div>
+
+          <div class="carousel-slide" data-index="3">
+            <img src="screenshots/trace-llm.png" alt="LLM observations panel" loading="lazy" />
+            <div class="carousel-caption">
+              <h3>Inline prompt &amp; completion viewer</h3>
+              <p>Every system prompt, user message, and model response — no log digging required.</p>
+            </div>
+          </div>
+
+          <div class="carousel-slide" data-index="4">
+            <img src="screenshots/trace-timeline.png" alt="Span timeline waterfall" loading="lazy" />
+            <div class="carousel-caption">
+              <h3>Waterfall timeline</h3>
+              <p>Visual breakdown of span durations — immediately obvious where time is being spent.</p>
+            </div>
+          </div>
+
+          <!-- Arrows -->
+          <button class="carousel-arrow carousel-prev" onclick="carouselMove(-1)" aria-label="Previous">&#8592;</button>
+          <button class="carousel-arrow carousel-rear" onclick="carouselMove(1)" aria-label="Next">&#8594;</button>
+        </div>
+
+        <!-- Thumbnail tabs -->
+        <div class="carousel-tabs" id="carouselTabs">
+          <div class="carousel-tab active" data-index="0" onclick="carouselGo(0)">
+            <img src="screenshots/dashboard.png" alt="" />
+            <span class="carousel-tab-label">Dashboard</span>
+          </div>
+          <div class="carousel-tab" data-index="1" onclick="carouselGo(1)">
+            <img src="screenshots/traces.png" alt="" />
+            <span class="carousel-tab-label">Traces</span>
+          </div>
+          <div class="carousel-tab" data-index="2" onclick="carouselGo(2)">
+            <img src="screenshots/trace-detail.png" alt="" />
+            <span class="carousel-tab-label">Detail</span>
+          </div>
+          <div class="carousel-tab" data-index="3" onclick="carouselGo(3)">
+            <img src="screenshots/trace-llm.png" alt="" />
+            <span class="carousel-tab-label">LLM View</span>
+          </div>
+          <div class="carousel-tab" data-index="4" onclick="carouselGo(4)">
+            <img src="screenshots/trace-timeline.png" alt="" />
+            <span class="carousel-tab-label">Timeline</span>
+          </div>
+        </div>
+
+        <!-- Mobile dots -->
+        <div class="carousel-dots" id="carouselDots">
+          <div class="carousel-dot active" data-index="0" onclick="carouselGo(0)"></div>
+          <div class="carousel-dot" data-index="1" onclick="carouselGo(1)"></div>
+          <div class="carousel-dot" data-index="2" onclick="carouselGo(2)"></div>
+          <div class="carousel-dot" data-index="3" onclick="carouselGo(3)"></div>
+          <div class="carousel-dot" data-index="4" onclick="carouselGo(4)"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Why LiteTrace: Deployment Simplicity -->
+  <section class="why-bg">
+    <div class="section-inner">
+      <h2>From zero to your first trace</h2>
+      <p class="why-intro">
+        Most observability tools require you to provision databases, configure collectors, wire up dashboards, and manage infra before you can see a single trace. LiteTrace is different.
+      </p>
+
+      <div class="complexity-grid">
+
+        <!-- LiteTrace -->
+        <div class="complexity-card featured">
+          <div class="complexity-card-header">
+            <span class="complexity-name">LiteTrace</span>
+            <span class="complexity-badge badge-green">recommended</span>
+          </div>
+          <div class="complexity-count">
+            <strong>1</strong>
+            command
+          </div>
+          <div class="complexity-steps">
+            <div class="step-block filled-blue"></div>
+            <div class="step-block empty"></div>
+            <div class="step-block empty"></div>
+            <div class="step-block empty"></div>
+            <div class="step-block empty"></div>
+            <div class="step-block empty"></div>
+          </div>
+          <div class="step-list">
+            <div class="step-item">
+              <div class="step-item-dot" style="background: var(--blue)"></div>
+              <span><code style="font-family:'JetBrains Mono',monospace;font-size:0.75em;color:#93c5fd">docker run</code> — UI, OTLP receiver, and SQLite all in one process</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jaeger -->
+        <div class="complexity-card">
+          <div class="complexity-card-header">
+            <span class="complexity-name">Jaeger</span>
+            <span class="complexity-badge badge-gray">general tracing</span>
+          </div>
+          <div class="complexity-count">
+            <strong>4</strong>
+            steps
+          </div>
+          <div class="complexity-steps">
+            <div class="step-block filled-orange"></div>
+            <div class="step-block filled-orange"></div>
+            <div class="step-block filled-orange"></div>
+            <div class="step-block filled-orange"></div>
+            <div class="step-block empty"></div>
+            <div class="step-block empty"></div>
+          </div>
+          <div class="step-list">
+            <div class="step-item">
+              <div class="step-item-dot orange"></div>
+              <span>Run Jaeger all-in-one container</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot orange"></div>
+              <span>Configure OTEL collector (if needed)</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot orange"></div>
+              <span>Wire up storage backend for persistence</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot orange"></div>
+              <span>Point exporter at correct port/path</span>
+            </div>
+          </div>
+          <div class="no-llm-note">✗ No LLM cost tracking</div>
+        </div>
+
+        <!-- Langfuse -->
+        <div class="complexity-card">
+          <div class="complexity-card-header">
+            <span class="complexity-name">Langfuse</span>
+            <span class="complexity-badge badge-gray">LLM focused</span>
+          </div>
+          <div class="complexity-count">
+            <strong>6</strong>
+            steps
+          </div>
+          <div class="complexity-steps">
+            <div class="step-block filled-red"></div>
+            <div class="step-block filled-red"></div>
+            <div class="step-block filled-red"></div>
+            <div class="step-block filled-red"></div>
+            <div class="step-block filled-red"></div>
+            <div class="step-block filled-red"></div>
+          </div>
+          <div class="step-list">
+            <div class="step-item">
+              <div class="step-item-dot red"></div>
+              <span>Provision PostgreSQL instance</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot red"></div>
+              <span>Provision Redis instance</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot red"></div>
+              <span>Run Langfuse server container</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot red"></div>
+              <span>Configure environment variables</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot red"></div>
+              <span>Create project + generate API key</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot red"></div>
+              <span>Install Langfuse SDK (not OTLP native)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grafana Tempo -->
+        <div class="complexity-card">
+          <div class="complexity-card-header">
+            <span class="complexity-name">Grafana Tempo</span>
+            <span class="complexity-badge badge-gray">enterprise stack</span>
+          </div>
+          <div class="complexity-count">
+            <strong>6+</strong>
+            steps
+          </div>
+          <div class="complexity-steps">
+            <div class="step-block filled-violet"></div>
+            <div class="step-block filled-violet"></div>
+            <div class="step-block filled-violet"></div>
+            <div class="step-block filled-violet"></div>
+            <div class="step-block filled-violet"></div>
+            <div class="step-block filled-violet"></div>
+          </div>
+          <div class="step-list">
+            <div class="step-item">
+              <div class="step-item-dot violet"></div>
+              <span>Deploy Grafana container</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot violet"></div>
+              <span>Deploy Tempo container</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot violet"></div>
+              <span>Write Tempo config YAML</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot violet"></div>
+              <span>Add Tempo datasource in Grafana</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot violet"></div>
+              <span>Create or import dashboards</span>
+            </div>
+            <div class="step-item">
+              <div class="step-item-dot violet"></div>
+              <span>Configure retention + storage</span>
+            </div>
+          </div>
+          <div class="no-llm-note">✗ No LLM cost tracking</div>
+        </div>
+
+      </div>
+
+      <!-- Key stats -->
+      <div class="why-stats">
+        <div class="why-stat">
+          <span class="why-stat-value">1</span>
+          <span class="why-stat-label">Docker command to run the entire stack</span>
+        </div>
+        <div class="why-stat">
+          <span class="why-stat-value">0</span>
+          <span class="why-stat-label">Config files, sidecars, or external databases needed</span>
+        </div>
+        <div class="why-stat">
+          <span class="why-stat-value">&lt;60s</span>
+          <span class="why-stat-label">From zero to your first LLM trace in production</span>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -502,12 +1062,13 @@
         <div class="step">
           <span class="step-num">02</span>
           <div class="step-body">
-            <h3>Configure your exporter</h3>
+            <h3>Point your OTLP exporter at localhost:4318</h3>
             <div class="code-wrap">
               <code>OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 node your-app.js</code>
               <button class="copy-btn"
                 onclick="copy(this, 'OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 node your-app.js')">Copy</button>
             </div>
+            <p style="margin-top: 10px; font-size: 0.8rem; color: var(--text-dim)">Works with any OpenTelemetry SDK — Python, Node.js, Go, Java, .NET, or any framework with OTel support.</p>
           </div>
         </div>
         <div class="step">
@@ -525,7 +1086,7 @@
   </section>
 
   <!-- Benchmarks -->
-  <section class="bench-bg">
+  <section>
     <div class="section-inner">
       <h2>Benchmarks</h2>
       <p class="bench-sub">OTLP/HTTP ingestion · 10 spans/request</p>
@@ -586,75 +1147,6 @@
     </div>
   </section>
 
-  <!-- Comparison -->
-  <section class="compare-bg">
-    <div class="section-inner">
-      <h2>How it compares</h2>
-      <table class="compare-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>LiteTrace</th>
-            <th>Jaeger</th>
-            <th>Zipkin</th>
-            <th>Langfuse</th>
-            <th>Grafana Tempo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="td-white">Single binary</td>
-            <td class="td-check">✓</td>
-            <td class="td-dash">—</td>
-            <td class="td-dash">—</td>
-            <td class="td-dash">—</td>
-            <td class="td-dash">—</td>
-          </tr>
-          <tr>
-            <td class="td-white">SQLite support</td>
-            <td class="td-check">✓</td>
-            <td class="td-dash">—</td>
-            <td class="td-dash">—</td>
-            <td class="td-dash">—</td>
-            <td class="td-dash">—</td>
-          </tr>
-          <tr>
-            <td class="td-white">LLM cost tracking</td>
-            <td class="td-check">✓</td>
-            <td class="td-dash">—</td>
-            <td class="td-dash">—</td>
-            <td class="td-check">✓</td>
-            <td class="td-dash">—</td>
-          </tr>
-          <tr>
-            <td class="td-white">OTLP native</td>
-            <td class="td-check">✓</td>
-            <td class="td-check">✓</td>
-            <td class="td-dash">—</td>
-            <td class="td-dash">—</td>
-            <td class="td-check">✓</td>
-          </tr>
-          <tr>
-            <td class="td-white">Free &amp; self-hosted</td>
-            <td class="td-check">✓</td>
-            <td class="td-check">✓</td>
-            <td class="td-check">✓</td>
-            <td class="td-check">✓</td>
-            <td class="td-check">✓</td>
-          </tr>
-          <tr>
-            <td class="td-white">Built-in UI</td>
-            <td class="td-check">✓</td>
-            <td class="td-check">✓</td>
-            <td class="td-check">✓</td>
-            <td class="td-check">✓</td>
-            <td class="td-dash">—</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
   <!-- Footer -->
   <footer>
     <div class="footer-inner">
@@ -665,6 +1157,7 @@
   </footer>
 
   <script>
+    /* ── Copy button ── */
     function copy(btn, text) {
       navigator.clipboard.writeText(text).then(() => {
         const orig = btn.textContent;
@@ -672,6 +1165,47 @@
         setTimeout(() => { btn.textContent = orig; }, 2000);
       });
     }
+
+    /* ── Carousel ── */
+    let current = 0;
+    const total = 5;
+
+    function carouselGo(idx) {
+      const slides = document.querySelectorAll('.carousel-slide');
+      const tabs   = document.querySelectorAll('.carousel-tab');
+      const dots   = document.querySelectorAll('.carousel-dot');
+
+      slides[current].classList.remove('active');
+      tabs[current].classList.remove('active');
+      dots[current].classList.remove('active');
+
+      current = (idx + total) % total;
+
+      slides[current].classList.add('active');
+      tabs[current].classList.add('active');
+      dots[current].classList.add('active');
+    }
+
+    function carouselMove(dir) {
+      carouselGo(current + dir);
+    }
+
+    /* Touch swipe */
+    (function () {
+      const el = document.getElementById('carouselMain');
+      let startX = 0;
+      el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      el.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 40) carouselMove(dx < 0 ? 1 : -1);
+      }, { passive: true });
+    })();
+
+    /* Keyboard navigation */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  carouselMove(-1);
+      if (e.key === 'ArrowRight') carouselMove(1);
+    });
   </script>
 
 </body>
